@@ -24,7 +24,7 @@ Private videos in your facebook can be downloaded in mutiple resolutions (144p, 
 
 - Firefox 96.0.4 or later
 
-- Opera 83.0.4254.27 or later
+- (Recommended) Opera 83.0.4254.27 or later
 
 - Chrome 97.0.4692.99 or later
 
