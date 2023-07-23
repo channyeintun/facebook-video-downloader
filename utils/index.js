@@ -87,21 +87,24 @@ export function solveCors(link) {
 }
 
 export function extractLink(str, regex) {
-    const extractedResult = (str + "").match(regex)[0] ?? "";
+    const matches = (str + "").match(regex);
+    const extractedResult = matches?.length > 0 ? matches[0] : "";
     return solveCors(extractedResult);
 }
 
 export function extractVideoLink(str, media) {
     const regex = new RegExp(
         '(?<=FBQualityLabel="' +
-            media +
-            '">u003CBaseURL>)(.*?)(?=u003C/BaseURL)',
+        media +
+        '">u003CBaseURL>)(.*?)(?=u003C/BaseURL)',
         "s"
     );
     return extractLink(str, regex);
 }
 
 export function extractAudioLink(str) {
-    const regex = /(?<="audio":\[\{"url":")(.*?)(?="\,"start":0)/s;
-    return extractLink(str, regex);
+    const regex = /"mime_type":"audio\/mp4".+?"base_url":"(https?:\/\/[^"]+)"/s;
+    const match = (str + "").match(regex);
+    const extractedResult = match?.length > 0 ? match[1] : "";
+    return solveCors(extractedResult);
 }

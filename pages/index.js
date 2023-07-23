@@ -136,38 +136,44 @@ export default class Home extends React.Component {
         const { resourceStr, selectedMedia } = this.state;
         const controller = new AbortController();
         if (resourceStr && selectedMedia) {
-            this.update({
-                loading: true,
-                isModalVisible: false,
-                error: "",
-                controller,
-            });
-            const video_link = extractVideoLink(resourceStr, selectedMedia);
-            const audio_link = extractAudioLink(resourceStr);
-            const getContentLength = (length) =>
-                this.update({
-                    contentLength: length + this.state.contentLength,
-                });
-            const progress = ({ value }) =>
-                this.update({
-                    chunkSize: this.state.chunkSize + value.byteLength,
-                });
-
-            const handleError = (error) =>
-                this.update({
-                    contentLength: 0,
-                    chunkSize: 0,
-                    loading: false,
-                    error: error.message,
-                    controller: null,
-                });
             try {
+                this.update({
+                    loading: true,
+                    isModalVisible: false,
+                    error: "",
+                    controller,
+                });
+                const video_link = extractVideoLink(resourceStr, selectedMedia);
+                console.log('video_link', video_link);
+                if (!video_link) throw new Error("Video link not found.");
+                const audio_link = extractAudioLink(resourceStr);
+                console.log('audio_link', audio_link);
+                if (!audio_link) throw new Error("Audio link not found.");
+                const getContentLength = (length) =>
+                    this.update({
+                        contentLength: length + this.state.contentLength,
+                    });
+                const progress = ({ value }) =>
+                    this.update({
+                        chunkSize: this.state.chunkSize + value.byteLength,
+                    });
+
+                const handleError = (error) =>
+                    this.update({
+                        contentLength: 0,
+                        chunkSize: 0,
+                        loading: false,
+                        error: error.message,
+                        controller: null,
+                    });
+
                 const data = await this.mergeVideo(video_link, audio_link, {
                     getContentLength,
                     progress,
                     handleError,
                     controller,
                 });
+
                 if (!this.state.error) {
                     const videoSrc = URL.createObjectURL(
                         new Blob([data.buffer], { type: "video/mp4" })
@@ -190,6 +196,7 @@ export default class Home extends React.Component {
                 }
             } catch (error) {
                 console.error(error.message);
+                this.update({ error: error.message, loading: false });
             }
         }
     };
@@ -231,8 +238,8 @@ export default class Home extends React.Component {
                         <>
                             <h1>Facebook Video Downloader</h1>
                             <textarea
-                                className="input-box"
                                 value={this.state.resourceStr}
+                                className="input-box"
                                 placeholder="view-source:video_link, select all codes, copy and paste here"
                                 onChange={this.onChangeInput}
                             ></textarea>

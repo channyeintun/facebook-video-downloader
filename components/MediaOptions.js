@@ -5,6 +5,7 @@ export function MediaOptions({ resolutions = {}, selectMedia }) {
                 {Object.values(resolutions).some((v) => v) ? (
                     Object.keys(resolutions).map((key) => (
                         <div
+                            key={key}
                             className={resolutions[key] ? "resolution" : "hide"}
                         >
                             <input
