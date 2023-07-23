@@ -85,9 +85,18 @@ export default class Home extends React.Component {
 
     async mergeVideo(video, audio, options) {
         const videoFile = await fetchFile(video, options);
-        this.ffmpeg.FS("writeFile", "video.mp4", videoFile);
+        if (videoFile?.length > 0) {
+            this.ffmpeg.FS("writeFile", "video.mp4", videoFile);
+        }
+
         const audioFile = await fetchFile(audio, options);
-        this.ffmpeg.FS("writeFile", "audio.mp4", audioFile);
+        if (audioFile?.length > 0) {
+            this.ffmpeg.FS("writeFile", "audio.mp4", audioFile);
+        }
+
+        if (videoFile?.length === 0 || audioFile?.length === 0) {
+            throw new Error("Download has stopped.");
+        }
 
         await this.ffmpeg.run(
             "-i",

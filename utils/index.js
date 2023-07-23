@@ -1,11 +1,11 @@
 export const fetchFile = async (_data, options = {}) => {
-    const { getContentLength, progress, handleError } = options;
+    const { getContentLength, progress, handleError, controller } = options;
     let data;
     try {
         if (typeof _data !== "string" || !_data) {
             throw new Error("Invalid URL or data is not passed");
         }
-        const response = await fetch(_data);
+        const response = await fetch(_data, controller?.signal ? { signal: controller.signal } : {});
         if (!response.ok) {
             throw new Error(
                 `Error ${response.status} - ${response.statusText}`
