@@ -15,6 +15,7 @@ import {
     checkResolutions,
     extractVideoLink,
     extractAudioLink,
+    extractTitle,
 } from "../utils";
 
 export default class Home extends React.Component {
@@ -128,8 +129,10 @@ export default class Home extends React.Component {
     onChangeInput = (e) => {
         const cleaner = new Cleaner(e.target.value);
         let resourceStr = cleaner.clean(["\\", "amp;", " "]).value;
+        const title = extractTitle(resourceStr);
         this.update({
             resourceStr,
+            fileName:title
         });
     };
 
@@ -293,6 +296,7 @@ export default class Home extends React.Component {
                             {this.state.videoSrc && (
                                 <div className="save-to-device">
                                     <input
+                                        value={this.state.fileName}
                                         onChange={(e) =>
                                             this.update({
                                                 fileName: e.target.value,

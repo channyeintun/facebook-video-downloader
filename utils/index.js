@@ -108,3 +108,14 @@ export function extractAudioLink(str) {
     const extractedResult = match?.length > 0 ? match[1] : "";
     return solveCors(extractedResult);
 }
+
+export function extractTitle(inputString) {
+  const pattern = /"story":\s*{"message":\s*{"text":"([^"]+)",/;
+  const match = inputString.match(pattern);
+
+  if (match) {
+    return match[1];
+  } else {
+    return null;
+  }
+}
