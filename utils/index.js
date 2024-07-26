@@ -1,11 +1,12 @@
 export const fetchFile = async (_data, options = {}) => {
-    const { getContentLength, progress, handleError, controller } = options;
+    const proxyUrl = '/api/proxy?url=' + encodeURIComponent(_data);
+    const { getContentLength, progress, handleError, controller, proxy } = options;
     let data;
     try {
         if (typeof _data !== "string" || !_data) {
             throw new Error("Invalid URL or data is not passed");
         }
-        const response = await fetch('/api/proxy?url=' + encodeURIComponent(_data), controller?.signal ? { signal: controller.signal } : {});
+        const response = await fetch(proxy ? proxyUrl : _data, controller?.signal ? { signal: controller.signal } : {});
         if (!response.ok) {
             throw new Error(
                 `Error ${response.status} - ${response.statusText}`
@@ -96,16 +97,15 @@ export function extractVideoLink(str, media) {
     const regex = new RegExp(
         '(?<=FBQualityLabel="' +
         media +
-        '">u003CBaseURL>)(.*?)(?=u003C/BaseURL)',
+        '">BaseURL>)(.*?)(?=/BaseURL)',
         "s"
     );
     return extractLink(str, regex);
 }
 
 export function extractAudioLink(str) {
-    const regex = /"mime_type":"audio\/mp4".+?"base_url":"(https?:\/\/[^"]+)"/s;
-    const match = (str + "").match(regex);
-    const extractedResult = match?.length > 0 ? match[1] : "";
+    const { audioId } = getIds(str);
+    const extractedResult = extractUrl(str, audioId);
     return solveCors(extractedResult);
 }
 
@@ -117,5 +117,44 @@ export function extractTitle(inputString) {
         return match[1];
     } else {
         return "";
+    }
+}
+
+export function getIds(resourceStr) {
+    const pattern = /"dash_prefetch_experimental":\[\s*"(\d+v)",\s*"(\d+a)"\s*\]/;
+    const match = resourceStr.match(pattern);
+    if (match) {
+        return {
+            videoId: match[1],
+            audioId: match[2]
+        }
+    } else {
+        throw new Error("No match found");
+    }
+}
+
+export function extractUrl(fullText, idValue) {
+    const start = `id="${idValue}"`;
+    const end = "/BaseURL>";
+    const startIndex = fullText.indexOf(start);
+    let endIndex = fullText.indexOf(end) + end.length;
+
+    while (endIndex !== -1 && endIndex <= startIndex) {
+        endIndex = fullText.indexOf("/BaseURL>", endIndex + 1) + end.length;
+    }
+    console.log({ startIndex, endIndex })
+
+    if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
+        const extractedText = fullText.substring(startIndex, endIndex);
+        const urlPattern = /BaseURL>(https:\/\/[^<]+)\/BaseURL>/;
+        const match = extractedText.match(urlPattern);
+
+        if (match) {
+            return match[1];
+        } else {
+            throw new Error("No URL found");
+        }
+    } else {
+        throw new Error("Invalid range");
     }
 }

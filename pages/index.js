@@ -43,6 +43,7 @@ export default class Home extends React.Component {
         fileName: "",
         error: "",
         controller: null,
+        proxy: false,
     };
 
     update = (newObj) => {
@@ -128,11 +129,19 @@ export default class Home extends React.Component {
 
     onChangeInput = (e) => {
         const cleaner = new Cleaner(e.target.value);
-        let resourceStr = cleaner.clean(["\\", "amp;", " "]).value;
+        let resourceStr = cleaner.clean(["u003C", "\\", "amp;"]).value;
+
+        /*
+        navigator.clipboard.writeText(resourceStr).then(function () {
+            console.log('resourceStr copied to clipboard successfully!');
+        }).catch(function (error) {
+            console.error('Unable to copy resourceStr: ', error);
+        }); */
+
         const title = extractTitle(resourceStr);
         this.update({
             resourceStr,
-            fileName:title
+            fileName: title
         });
     };
 
@@ -184,6 +193,7 @@ export default class Home extends React.Component {
                     progress,
                     handleError,
                     controller,
+                    proxy: this.state.proxy
                 });
 
                 if (!this.state.error) {
@@ -271,12 +281,27 @@ export default class Home extends React.Component {
                                     Clear
                                 </button>
                             ) : (
-                                <button
-                                    onClick={this.checkHDhandler}
-                                    className="check-button"
-                                >
-                                    Check Media
-                                </button>
+                                <div style={{ minWidth: 380 }} className="flex items-center gap-3">
+                                    <button
+                                        onClick={this.checkHDhandler}
+                                        className="check-button flex-grow"
+                                    >
+                                        Check Media
+                                    </button>
+                                    <input
+                                        id="proxy"
+                                        checked={this.state.proxy}
+                                        onChange={
+                                            e => this.setState({ proxy: e.target.checked })}
+                                        type="checkbox" />
+                                    <label style={{
+                                        color: 'black'
+                                    }} htmlFor="proxy">
+                                        <abbr title="If download has stopped, enable proxy">
+                                            Proxy
+                                        </abbr>
+                                    </label>
+                                </div>
                             )}
 
                             <div className="status">
@@ -379,7 +404,6 @@ export default class Home extends React.Component {
                     }
                     .check-button {
                         margin: 10px 0;
-                        min-width: 380px;
                         min-height: 40px;
                         border: none;
                         outline: none;
@@ -452,6 +476,18 @@ export default class Home extends React.Component {
                         width: calc(100% - 25px);
                         height: 100%;
                         padding: 0 8px;
+                    }
+                    .flex {
+                        display:flex;
+                    }
+                    .flex-grow {
+                        flex-grow:1;
+                    }
+                    .items-center {
+                        align-items:center;
+                    }
+                    .gap-3 {
+                        gap:12px;
                     }
                     .save-button {
                         min-width: 25px;
