@@ -5,7 +5,7 @@ export const fetchFile = async (_data, options = {}) => {
         if (typeof _data !== "string" || !_data) {
             throw new Error("Invalid URL or data is not passed");
         }
-        const response = await fetch(_data, controller?.signal ? { signal: controller.signal } : {});
+        const response = await fetch('/api/proxy?url=' + encodeURIComponent(_data), controller?.signal ? { signal: controller.signal } : {});
         if (!response.ok) {
             throw new Error(
                 `Error ${response.status} - ${response.statusText}`
@@ -110,12 +110,12 @@ export function extractAudioLink(str) {
 }
 
 export function extractTitle(inputString) {
-  const pattern = /"story":\s*{"message":\s*{"text":"([^"]+)",/;
-  const match = inputString.match(pattern);
+    const pattern = /"story":\s*{"message":\s*{"text":"([^"]+)",/;
+    const match = inputString.match(pattern);
 
-  if (match) {
-    return match[1];
-  } else {
-    return null;
-  }
+    if (match) {
+        return match[1];
+    } else {
+        return "";
+    }
 }
