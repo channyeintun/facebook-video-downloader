@@ -9,12 +9,13 @@ export function MediaOptions({ resolutions = {}, selectMedia }) {
                             className={resolutions[key] ? "resolution" : "hide"}
                         >
                             <input
+                                id={key}
                                 type="radio"
                                 name="media"
                                 onClick={selectMedia}
                                 value={key}
                             />
-                            <label>{key}</label>
+                            <label htmlFor={key}>{key}</label>
                         </div>
                     ))
                 ) : (
