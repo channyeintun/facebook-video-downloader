@@ -32,8 +32,4 @@ I have used FFMPEG Library with WASM
 
 - Microsoft Edge 98.0.1108.43 or later
 
-## Authors
-
-- [@channyeintun](https://www.github.com/channyeintun)  
-
 
