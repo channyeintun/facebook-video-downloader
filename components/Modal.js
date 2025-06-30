@@ -31,14 +31,17 @@ export function Modal({ visible,children }) {
                                     align-items:center;
                               }
                               .modal{
-                                   min-width:300px;
-                                   min-height:300px;
-                                   padding:50px;
+                                   min-width: 400px;
+                                   max-width: 90vw;
+                                   min-height: 300px;
+                                   max-height: 90vh;
+                                   padding: 30px;
                                    background:white;
                                    color:black;
                                    border-radius:5px;
                                    display:grid;
                                    grid-template:repeat(2,auto) / 1fr;
+                                   overflow: hidden;
                               }
                               .modal-body{
                                     width:100%;

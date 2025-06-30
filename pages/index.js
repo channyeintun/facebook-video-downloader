@@ -12,8 +12,7 @@ import {
 import {
     fetchFile,
     Cleaner,
-    checkResolutions,
-    extractVideoLink,
+    extractVideoLinks,
     extractAudioLink,
     extractTitle,
 } from "../utils";
@@ -24,18 +23,8 @@ export default class Home extends React.Component {
         chunkSize: 0,
         videoSrc: "",
         resourceStr: "",
-        resolutions: {
-            "144p": false,
-            "180p": false,
-            "240p": false,
-            "270p": false,
-            "360p": false,
-            "480p": false,
-            "540p": false,
-            "720p": false,
-            "1080p": false,
-        },
-        selectedMedia: "",
+        resolutions: [],
+        selectedQuality: "",
         loading: false,
         isLoaded: false,
         isModalVisible: false,
@@ -47,12 +36,10 @@ export default class Home extends React.Component {
     };
 
     update = (newObj) => {
-        this.setState((prevState) => {
-            return {
-                ...prevState,
-                ...newObj,
-            };
-        });
+        this.setState((prevState) => ({
+            ...prevState,
+            ...newObj,
+        }));
     };
 
     async componentDidMount() {
@@ -68,10 +55,10 @@ export default class Home extends React.Component {
             if (!this.ffmpeg.isLoaded()) {
                 await this.ffmpeg.load().catch((err) => {
                     console.error(err);
-                    this.update({ error: err });
+                    this.update({ error: err.message });
                 });
                 this.ffmpeg.setProgress(({ ratio }) => {
-                    console.log("parsing", parseInt(ratio) * 100 + "%");
+                    console.log("parsing", parseInt(ratio * 100) + "%");
                 });
             }
             this.update({
@@ -131,32 +118,43 @@ export default class Home extends React.Component {
         const cleaner = new Cleaner(e.target.value);
         let resourceStr = cleaner.clean(["u003C", "\\", "amp;"]).value;
 
-        /*
-        navigator.clipboard.writeText(resourceStr).then(function () {
-            console.log('resourceStr copied to clipboard successfully!');
-        }).catch(function (error) {
-            console.error('Unable to copy resourceStr: ', error);
-        }); */
-
         const title = extractTitle(resourceStr);
         this.update({
             resourceStr,
-            fileName: title
+            fileName: title,
+            resolutions: [],
+            selectedQuality: "",
         });
     };
 
     checkHDhandler = () => {
-        const resolutions = checkResolutions(this.state.resourceStr);
-        this.update({
-            resolutions,
-            isModalVisible: true,
-        });
+        try {
+            const links = extractVideoLinks(this.state.resourceStr);
+            const resolutions = links.map((item, index) => ({
+                videoId: item.videoId,
+                qualityClass: item.qualityClass,
+                qualityLabel: item.qualityLabel,
+                url: item.url,
+                thumbnail: item.thumbnail,
+                key: `${item.qualityClass}_${item.qualityLabel}_${index}`,
+            }));
+            
+            this.update({
+                resolutions,
+                isModalVisible: true,
+            });
+        } catch (error) {
+            this.update({
+                error: error.message,
+                isModalVisible: false,
+            });
+        }
     };
 
     extractLinkHandler = async () => {
-        const { resourceStr, selectedMedia } = this.state;
+        const { resourceStr, selectedQuality, resolutions } = this.state;
         const controller = new AbortController();
-        if (resourceStr && selectedMedia) {
+        if (resourceStr && selectedQuality) {
             try {
                 this.update({
                     loading: true,
@@ -164,12 +162,23 @@ export default class Home extends React.Component {
                     error: "",
                     controller,
                 });
-                const video_link = extractVideoLink(resourceStr, selectedMedia);
-                console.log('video_link', video_link);
+
+                // Find the selected resolution
+                const selectedResolution = resolutions.find(
+                    (res) => res.key === selectedQuality
+                );
+                if (!selectedResolution) {
+                    throw new Error("Selected resolution not found.");
+                }
+
+                const video_link = selectedResolution.url;
+                console.log("video_link", video_link);
                 if (!video_link) throw new Error("Video link not found.");
+
                 const audio_link = extractAudioLink(resourceStr);
-                console.log('audio_link', audio_link);
+                console.log("audio_link", audio_link);
                 if (!audio_link) throw new Error("Audio link not found.");
+
                 const getContentLength = (length) =>
                     this.update({
                         contentLength: length + this.state.contentLength,
@@ -193,7 +202,7 @@ export default class Home extends React.Component {
                     progress,
                     handleError,
                     controller,
-                    proxy: this.state.proxy
+                    proxy: this.state.proxy,
                 });
 
                 if (!this.state.error) {
@@ -225,9 +234,10 @@ export default class Home extends React.Component {
 
     selectMedia = (e) => {
         this.update({
-            selectedMedia: e.target.value,
+            selectedQuality: e.target.value,
         });
     };
+
     hideModal = () => {
         this.update({
             isModalVisible: false,
@@ -236,7 +246,7 @@ export default class Home extends React.Component {
 
     cleanVideo = () => {
         const videoSrc = this.state.videoSrc;
-        this.update({ videoSrc: "", resourceStr: "" });
+        this.update({ videoSrc: "", resourceStr: "", resolutions: [], selectedQuality: "" });
         URL.revokeObjectURL(videoSrc);
     };
 
@@ -249,9 +259,7 @@ export default class Home extends React.Component {
     };
 
     render() {
-        const contentLengthInMB = (this.state.contentLength / 1048576).toFixed(
-            2
-        );
+        const contentLengthInMB = (this.state.contentLength / 1048576).toFixed(2);
         const chunkSizeInMB = (this.state.chunkSize / 1048576).toFixed(2);
         return (
             <>
@@ -291,12 +299,17 @@ export default class Home extends React.Component {
                                     <input
                                         id="proxy"
                                         checked={this.state.proxy}
-                                        onChange={
-                                            e => this.setState({ proxy: e.target.checked })}
-                                        type="checkbox" />
-                                    <label style={{
-                                        color: 'black'
-                                    }} htmlFor="proxy">
+                                        onChange={(e) =>
+                                            this.setState({ proxy: e.target.checked })
+                                        }
+                                        type="checkbox"
+                                    />
+                                    <label
+                                        style={{
+                                            color: "black",
+                                        }}
+                                        htmlFor="proxy"
+                                    >
                                         <abbr title="If download has stopped, enable proxy">
                                             Proxy
                                         </abbr>
@@ -365,13 +378,13 @@ export default class Home extends React.Component {
                         </button>
                         <button
                             className={
-                                this.state.loading || !this.state.selectedMedia
+                                this.state.loading || !this.state.selectedQuality
                                     ? "button disabled"
                                     : "button"
                             }
                             onClick={this.extractLinkHandler}
                             disabled={
-                                this.state.loading || !this.state.selectedMedia
+                                this.state.loading || !this.state.selectedQuality
                             }
                         >
                             Download
@@ -478,16 +491,16 @@ export default class Home extends React.Component {
                         padding: 0 8px;
                     }
                     .flex {
-                        display:flex;
+                        display: flex;
                     }
                     .flex-grow {
-                        flex-grow:1;
+                        flex-grow: 1;
                     }
                     .items-center {
-                        align-items:center;
+                        align-items: center;
                     }
                     .gap-3 {
-                        gap:12px;
+                        gap: 12px;
                     }
                     .save-button {
                         min-width: 25px;
