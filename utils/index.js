@@ -112,56 +112,23 @@ export function extractVideoLinks(str) {
 
     // Collect all representation matches
     while ((match = representationRegex.exec(cleanedStr)) !== null) {
-        // Include specific IDs or match the videoId from getIds
         console.log("Match found:", match);
         console.log("Video ID in match:", match[1]);
-        if (match[1] === videoId) {
-            representations.push({
-                videoId: match[1],
-                qualityClass: match[2],
-                qualityLabel: match[3],
-                url: match[4],
-            });
-        }
+        representations.push({
+            videoId: match[1],
+            qualityClass: match[2],
+            qualityLabel: match[3],
+            url: solveCors(match[4]),
+        });
     }
 
     if (representations.length === 0) {
-        throw new Error("No video representations found for the specified or target video IDs");
+        throw new Error("No video representations found");
     }
 
-    // Define resolution order for comparison
-    const resolutionOrder = ["144p", "180p", "240p", "270p", "360p", "480p", "540p", "720p", "1080p"];
+    console.log("result:", representations);
 
-    // Filter and sort for HD (highest resolution, prefer 1080p)
-    const hdRepresentations = representations
-        .filter((rep) => rep.qualityClass === "hd")
-        .sort((a, b) => resolutionOrder.indexOf(b.qualityLabel) - resolutionOrder.indexOf(a.qualityLabel));
-
-    // Filter and sort for SD (lowest resolution, minimum 360p)
-    const sdRepresentations = representations
-        .filter((rep) => rep.qualityClass === "sd" && resolutionOrder.indexOf(rep.qualityLabel) >= resolutionOrder.indexOf("360p"))
-        .sort((a, b) => resolutionOrder.indexOf(a.qualityLabel) - resolutionOrder.indexOf(b.qualityLabel));
-
-    const result = {
-        hd: hdRepresentations.length > 0 ? {
-            videoId: hdRepresentations[0].videoId,
-            qualityClass: hdRepresentations[0].qualityClass,
-            qualityLabel: hdRepresentations[0].qualityLabel,
-            url: solveCors(hdRepresentations[0].url),
-        } : null,
-        sd: sdRepresentations.length > 0 ? {
-            videoId: sdRepresentations[0].videoId,
-            qualityClass: sdRepresentations[0].qualityClass,
-            qualityLabel: sdRepresentations[0].qualityLabel,
-            url: solveCors(sdRepresentations[0].url),
-        } : null,
-    };
-
-    if (!result.hd && !result.sd) {
-        throw new Error("No valid HD or SD links found for the specified or target video IDs");
-    }
-
-    return result;
+    return representations;
 }
 
 export function extractAudioLink(str) {
@@ -201,4 +168,27 @@ export function extractTitle(inputString) {
     } else {
         return "";
     }
+}
+
+export function extractThumbnailUrl(str) {
+    // Clean the entire input string
+    const cleaner = new Cleaner(str);
+    const cleanedStr = cleaner.clean().value;
+
+    // Regex to match common thumbnail URL patterns
+    const thumbnailRegex = /"thumbnail(?:_url)?":"(https:\/\/[^"]+\.(?:jpg|png))"|"image":{"uri":"(https:\/\/[^"]+\.(?:jpg|png))"/g;
+    let match;
+    let thumbnailUrl = null;
+
+    // Find the first thumbnail URL
+    while ((match = thumbnailRegex.exec(cleanedStr)) !== null) {
+        thumbnailUrl = match[1] || match[2];
+        if (thumbnailUrl) break;
+    }
+
+    if (!thumbnailUrl) {
+        throw new Error("No thumbnail URL found in the input string");
+    }
+
+    return solveCors(thumbnailUrl);
 }

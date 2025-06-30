@@ -130,27 +130,14 @@ export default class Home extends React.Component {
     checkHDhandler = () => {
         try {
             const links = extractVideoLinks(this.state.resourceStr);
-            const resolutions = [];
-            if (links.hd) {
-                console.log("HD link found:", links.hd);
-                resolutions.push({
-                    videoId: links.hd.videoId,
-                    qualityClass: links.hd.qualityClass,
-                    qualityLabel: links.hd.qualityLabel,
-                    url: links.hd.url,
-                    key: `hd_${links.hd.qualityLabel}`,
-                });
-            }
-            console.log("SD link found:", links.sd);
-            if (links.sd) {
-                resolutions.push({
-                    videoId: links.sd.videoId,
-                    qualityClass: links.sd.qualityClass,
-                    qualityLabel: links.sd.qualityLabel,
-                    url: links.sd.url,
-                    key: `sd_${links.sd.qualityLabel}`,
-                });
-            }
+            const resolutions = links.map((item, index) => ({
+                videoId: item.videoId,
+                qualityClass: item.qualityClass,
+                qualityLabel: item.qualityLabel,
+                url: item.url,
+                key: `${item.qualityClass}_${item.qualityLabel}_${index}`,
+            }));
+            
             this.update({
                 resolutions,
                 isModalVisible: true,
