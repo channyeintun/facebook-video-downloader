@@ -18,13 +18,13 @@ export function MediaOptions({ resolutions = [], selectMedia }) {
                                     {res.qualityLabel} ({res.qualityClass.toUpperCase()})
                                 </label>
                             </div>
-                            {res.thumbnail && (
-                                <img
-                                    src={'/api/proxy?url=' + encodeURIComponent(res.thumbnail)}
-                                    className="thumbnail-image"
-                                    alt="Video thumbnail"
-                                />
-                            )}
+                            <video
+                                src={'/api/proxy?url=' + encodeURIComponent(res.url)}
+                                className="preview-video"
+                                controls
+                                preload="metadata"
+                                muted
+                            />
                         </div>
                     ))
                 ) : (
@@ -62,14 +62,6 @@ export function MediaOptions({ resolutions = [], selectMedia }) {
                     max-width: 300px;
                     height: 200px;
                     border-radius: 4px;
-                }
-                .thumbnail-image {
-                    width: 100%;
-                    max-width: 300px;
-                    height: 150px;
-                    object-fit: cover;
-                    border-radius: 4px;
-                    margin-bottom: 8px;
                 }
                 .error {
                     color: red;

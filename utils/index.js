@@ -104,18 +104,6 @@ export function extractVideoLinks(str) {
     const cleaner = new Cleaner(str);
     const cleanedStr = cleaner.clean().value;
 
-    // Extract all thumbnail URLs - updated regex to match the actual format
-    const thumbnailRegex = /"preferred_thumbnail":\{"image":\{"uri":"(https:\\?\/\\?\/[^"]+\.(?:jpg|png)[^"]*)"/g;
-    const thumbnails = [];
-    let thumbnailMatch;
-    while ((thumbnailMatch = thumbnailRegex.exec(cleanedStr)) !== null) {
-        console.log("Thumbnail match found:", thumbnailMatch);
-        // Clean the escaped slashes in the URL
-        const cleanUrl = thumbnailMatch[1].replace(/\\\//g, '/');
-        thumbnails.push(solveCors(cleanUrl));
-    }
-    console.log("Found thumbnails:", thumbnails);
-
     // Regex to match Representation blocks
     const representationRegex = /<Representation\s+[^>]*id="(\d+v)"[^>]*FBQualityClass="([^"]+)"[^>]*FBQualityLabel="([^"]+)"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
     const representations = [];
@@ -137,43 +125,9 @@ export function extractVideoLinks(str) {
         throw new Error("No video representations found");
     }
 
-    let decreasementCount = 0;
-    let previousResolution = representations[0].qualityLabel;
-    let sliceIndex = 0;
+    console.log("result:", representations);
 
-    for (let i = 1; i < representations.length; i++) {
-        const currentResolution = representations[i].qualityLabel;
-        sliceIndex = i;
-        // If current resolution is lower than previous, it's a decreasement
-        if (currentResolution.replace("p","") < previousResolution.replace("p","")) {
-            decreasementCount++;
-            console.log(`Decreasement ${decreasementCount} found at index ${i}`);
-            
-            // If this is the second decreasement, stop here
-            if (decreasementCount === 2) {
-                console.log(`Second decreasement found, cutting off at index ${i}`);
-                break;
-            }
-        }
-            // Update previous resolution for next iteration
-        previousResolution = currentResolution; 
-    }
-
-    // Keep only first video's representations
-    const firstVideoRepresentations = representations.slice(0, sliceIndex+1);
-    console.log("First video representations count:", firstVideoRepresentations.length);
-
-    // Use only first thumbnail for all first video representations
-    const firstThumbnail = thumbnails[0] || null;
-    
-    const finalRepresentations = firstVideoRepresentations.map(rep => ({
-        ...rep,
-        thumbnail: firstThumbnail
-    }));
-
-    console.log("result:", finalRepresentations);
-
-    return finalRepresentations;
+    return representations;
 }
 
 export function extractAudioLink(str) {
