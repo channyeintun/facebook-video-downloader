@@ -105,6 +105,18 @@ export function extractVideoLinks(str) {
     const cleaner = new Cleaner(str);
     const cleanedStr = cleaner.clean().value;
 
+    // Extract all thumbnail URLs - updated regex to match the actual format
+    const thumbnailRegex = /"preferred_thumbnail":\{"image":\{"uri":"(https:\\?\/\\?\/[^"]+\.(?:jpg|png)[^"]*)"/g;
+    const thumbnails = [];
+    let thumbnailMatch;
+    while ((thumbnailMatch = thumbnailRegex.exec(cleanedStr)) !== null) {
+        console.log("Thumbnail match found:", thumbnailMatch);
+        // Clean the escaped slashes in the URL
+        const cleanUrl = thumbnailMatch[1].replace(/\\\//g, '/');
+        thumbnails.push(solveCors(cleanUrl));
+    }
+    console.log("Found thumbnails:", thumbnails);
+
     // Regex to match Representation blocks
     const representationRegex = /<Representation\s+[^>]*id="(\d+v)"[^>]*FBQualityClass="([^"]+)"[^>]*FBQualityLabel="([^"]+)"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
     const representations = [];
@@ -126,10 +138,38 @@ export function extractVideoLinks(str) {
         throw new Error("No video representations found");
     }
 
-    console.log("result:", representations);
+    // Group representations by videoId to find unique videos
+    const videoGroups = {};
+    representations.forEach(rep => {
+        if (!videoGroups[rep.videoId]) {
+            videoGroups[rep.videoId] = [];
+        }
+        videoGroups[rep.videoId].push(rep);
+    });
 
-    return representations;
+    const uniqueVideoIds = Object.keys(videoGroups);
+    console.log("Unique video IDs:", uniqueVideoIds);
+    
+    // Calculate resolutions per video based on actual data
+    const resolutionsPerVideo = Math.floor(representations.length / uniqueVideoIds.length);
+    console.log("Resolutions per video:", resolutionsPerVideo);
+
+    const finalRepresentations = representations.map((rep, index) => {
+        const videoIndex = Math.floor(index / resolutionsPerVideo);
+        const thumbnail = thumbnails[videoIndex] || null;
+        
+        return {
+            ...rep,
+            thumbnail
+        };
+    });
+
+    console.log("result:", finalRepresentations);
+
+    return finalRepresentations;
 }
+
+// Remove the separate extractThumbnailUrl function as it's now integrated
 
 export function extractAudioLink(str) {
     const { audioId } = getIds(str);
@@ -168,27 +208,4 @@ export function extractTitle(inputString) {
     } else {
         return "";
     }
-}
-
-export function extractThumbnailUrl(str) {
-    // Clean the entire input string
-    const cleaner = new Cleaner(str);
-    const cleanedStr = cleaner.clean().value;
-
-    // Regex to match common thumbnail URL patterns
-    const thumbnailRegex = /"thumbnail(?:_url)?":"(https:\/\/[^"]+\.(?:jpg|png))"|"image":{"uri":"(https:\/\/[^"]+\.(?:jpg|png))"/g;
-    let match;
-    let thumbnailUrl = null;
-
-    // Find the first thumbnail URL
-    while ((match = thumbnailRegex.exec(cleanedStr)) !== null) {
-        thumbnailUrl = match[1] || match[2];
-        if (thumbnailUrl) break;
-    }
-
-    if (!thumbnailUrl) {
-        throw new Error("No thumbnail URL found in the input string");
-    }
-
-    return solveCors(thumbnailUrl);
 }

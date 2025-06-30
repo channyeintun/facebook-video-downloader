@@ -135,6 +135,7 @@ export default class Home extends React.Component {
                 qualityClass: item.qualityClass,
                 qualityLabel: item.qualityLabel,
                 url: item.url,
+                thumbnail: item.thumbnail,
                 key: `${item.qualityClass}_${item.qualityLabel}_${index}`,
             }));
             
