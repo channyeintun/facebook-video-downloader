@@ -1,5 +1,4 @@
 export const fetchFile = async (_data, options = {}) => {
-    // Your existing fetchFile function remains unchanged
     const proxyUrl = '/api/proxy?url=' + encodeURIComponent(_data);
     const { getContentLength, progress, handleError, controller, proxy } = options;
     let data;
@@ -176,8 +175,6 @@ export function extractVideoLinks(str) {
 
     return finalRepresentations;
 }
-
-// Remove the separate extractThumbnailUrl function as it's now integrated
 
 export function extractAudioLink(str) {
     const { audioId } = getIds(str);
