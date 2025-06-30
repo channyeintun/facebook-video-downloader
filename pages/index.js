@@ -23,8 +23,8 @@ export default class Home extends React.Component {
         chunkSize: 0,
         videoSrc: "",
         resourceStr: "",
-        resolutions: [], // Changed to store resolution objects
-        selectedQuality: "", // Tracks selected resolution (e.g., "hd_1080p", "sd_360p")
+        resolutions: [],
+        selectedQuality: "",
         loading: false,
         isLoaded: false,
         isModalVisible: false,

@@ -1,21 +1,20 @@
-export function MediaOptions({ resolutions = {}, selectMedia }) {
+export function MediaOptions({ resolutions = [], selectMedia }) {
     return (
         <>
             <div className="options">
-                {Object.values(resolutions).some((v) => v) ? (
-                    Object.keys(resolutions).map((key) => (
-                        <div
-                            key={key}
-                            className={resolutions[key] ? "resolution" : "hide"}
-                        >
+                {resolutions.length > 0 ? (
+                    resolutions.map((res) => (
+                        <div key={res.key} className="resolution">
                             <input
-                                id={key}
+                                id={res.key}
                                 type="radio"
                                 name="media"
-                                onClick={selectMedia}
-                                value={key}
+                                onChange={selectMedia}
+                                value={res.key}
                             />
-                            <label htmlFor={key}>{key}</label>
+                            <label htmlFor={res.key}>
+                                {res.qualityLabel} ({res.qualityClass.toUpperCase()})
+                            </label>
                         </div>
                     ))
                 ) : (
@@ -42,7 +41,7 @@ export function MediaOptions({ resolutions = {}, selectMedia }) {
                 }
                 .resolution {
                     display: flex;
-                    align-items:center;
+                    align-items: center;
                     flex-wrap: nowrap;
                     padding-left: 10px;
                 }

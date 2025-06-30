@@ -78,25 +78,6 @@ export class Cleaner {
     }
 }
 
-export function checkResolutions(str) {
-    const resolutions = [
-        "144p",
-        "180p",
-        "240p",
-        "270p",
-        "360p",
-        "480p",
-        "540p",
-        "720p",
-        "1080p",
-    ];
-
-    return resolutions.reduce((acc, resolution) => {
-        acc[resolution] = str.includes(`FBQualityLabel="${resolution}"`);
-        return acc;
-    }, {});
-}
-
 export function solveCors(link) {
     console.log("origin:", link);
     const regex = /(?<=video)(.*?)(?=.fbcdn)/s;
@@ -185,33 +166,30 @@ export function extractVideoLinks(str) {
 
 export function extractAudioLink(str) {
     const { audioId } = getIds(str);
-    const extractedResult = extractUrl(str, audioId);
-    return solveCors(extractedResult);
-}
+    console.log("audioId:", audioId);
 
-export function extractUrl(fullText, idValue) {
-    const start = `id="${idValue}"`;
-    const end = "/BaseURL>";
-    const startIndex = fullText.indexOf(start);
-    let endIndex = fullText.indexOf(end) + end.length;
+    // Clean the entire input string
+    const cleaner = new Cleaner(str);
+    const cleanedStr = cleaner.clean().value;
 
-    while (endIndex !== -1 && endIndex <= startIndex) {
-        endIndex = fullText.indexOf("/BaseURL>", endIndex + 1) + end.length;
-    }
+    // Regex to match audio Representation blocks
+    const audioRegex = /<Representation\s+[^>]*id="(\d+a)"[^>]*mimeType="audio\/mp4"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
+    let match;
+    let audioUrl = null;
 
-    if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
-        const extractedText = fullText.substring(startIndex, endIndex);
-        const urlPattern = /BaseURL>(https:\/\/[^<]+)\/BaseURL>/;
-        const match = extractedText.match(urlPattern);
-
-        if (match) {
-            return match[1];
-        } else {
-            throw new Error("No URL found");
+    // Find the audio representation matching the audioId
+    while ((match = audioRegex.exec(cleanedStr)) !== null) {
+        if (match[1] === audioId) {
+            audioUrl = match[2];
+            break;
         }
-    } else {
-        throw new Error("Invalid range");
     }
+
+    if (!audioUrl) {
+        throw new Error("No audio representation found for the specified audioId: " + audioId);
+    }
+
+    return solveCors(audioUrl);
 }
 
 export function extractTitle(inputString) {
