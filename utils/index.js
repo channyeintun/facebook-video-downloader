@@ -1,6 +1,5 @@
 export const fetchFile = async (_data, options = {}) => {
     // Your existing fetchFile function remains unchanged
-    // Your existing fetchFile function remains unchanged
     const proxyUrl = '/api/proxy?url=' + encodeURIComponent(_data);
     const { getContentLength, progress, handleError, controller, proxy } = options;
     let data;
@@ -57,21 +56,6 @@ export class Cleaner {
         this.value = raw_text;
     }
     clean(trashWords = []) {
-        // Handle common JSON-escaped characters
-        const escapeMap = {
-            "u003C": "<",
-            "u003E": ">",
-            "u002F": "/",
-            "u0026": "&",
-            "u00253D": "=",
-            "u0025": "%",
-            "\\": "",
-            "amp;": "&",
-        };
-        this.value = Object.keys(escapeMap).reduce(
-            (text, key) => text.replaceAll(key, escapeMap[key]),
-            this.value
-        );
         // Handle common JSON-escaped characters
         const escapeMap = {
             "u003C": "<",
@@ -197,30 +181,6 @@ export function extractVideoLinks(str) {
 
 export function extractAudioLink(str) {
     const { audioId } = getIds(str);
-    console.log("audioId:", audioId);
-
-    // Clean the entire input string
-    const cleaner = new Cleaner(str);
-    const cleanedStr = cleaner.clean().value;
-
-    // Regex to match audio Representation blocks
-    const audioRegex = /<Representation\s+[^>]*id="(\d+a)"[^>]*mimeType="audio\/mp4"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
-    let match;
-    let audioUrl = null;
-
-    // Find the audio representation matching the audioId
-    while ((match = audioRegex.exec(cleanedStr)) !== null) {
-        if (match[1] === audioId) {
-            audioUrl = match[2];
-            break;
-        }
-    }
-
-    if (!audioUrl) {
-        throw new Error("No audio representation found for the specified audioId: " + audioId);
-    }
-
-    return solveCors(audioUrl);
     console.log("audioId:", audioId);
 
     // Clean the entire input string
