@@ -1,67 +1,77 @@
-
 export function Spinner() {
       return (
             <>
-                  <div className="lds-ellipsis">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                        <div></div>
+                  <div className="spinner-container">
+                        <div className="spinner">
+                              <div className="spinner-dot"></div>
+                              <div className="spinner-dot"></div>
+                              <div className="spinner-dot"></div>
+                              <div className="spinner-dot"></div>
+                        </div>
                   </div>
                   <style jsx>{`
-                  .lds-ellipsis {
-                        position: relative;
-                        height:10px;
-                  }
-                 .lds-ellipsis div {
-                   position: absolute;
-                   width: 8px;
-                   height: 8px;
-                   border-radius: 50%;
-                   background: #0a2342;
-                   animation-timing-function: cubic-bezier(0, 1, 1, 0);
-                 }
-                 .lds-ellipsis div:nth-child(1) {
-                   left: 8px;
-                   animation: lds-ellipsis1 0.6s infinite;
-                 }
-                 .lds-ellipsis div:nth-child(2) {
-                   left: 8px;
-                   animation: lds-ellipsis2 0.6s infinite;
-                 }
-                 .lds-ellipsis div:nth-child(3) {
-                   left: 32px;
-                   animation: lds-ellipsis2 0.6s infinite;
-                 }
-                 .lds-ellipsis div:nth-child(4) {
-                   left: 56px;
-                   animation: lds-ellipsis3 0.6s infinite;
-                 }
-                 @keyframes lds-ellipsis1 {
-                   0% {
-                     transform: scale(0);
-                   }
-                   100% {
-                     transform: scale(1);
-                   }
-                 }
-                 @keyframes lds-ellipsis3 {
-                   0% {
-                     transform: scale(1);
-                   }
-                   100% {
-                     transform: scale(0);
-                   }
-                 }
-                 @keyframes lds-ellipsis2 {
-                   0% {
-                     transform: translate(0, 0);
-                   }
-                   100% {
-                     transform: translate(24px, 0);
-                   }
-                 }                                  
-       `}</style>
+                        .spinner-container {
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                        }
+
+                        .spinner {
+                              position: relative;
+                              width: 40px;
+                              height: 10px;
+                              display: flex;
+                              align-items: center;
+                              justify-content: space-between;
+                        }
+
+                        .spinner-dot {
+                              width: 8px;
+                              height: 8px;
+                              border-radius: 50%;
+                              background: #4f46e5;
+                              animation: spinner-bounce 1.4s ease-in-out infinite both;
+                        }
+
+                        .spinner-dot:nth-child(1) {
+                              animation-delay: -0.32s;
+                        }
+
+                        .spinner-dot:nth-child(2) {
+                              animation-delay: -0.16s;
+                        }
+
+                        .spinner-dot:nth-child(3) {
+                              animation-delay: 0s;
+                        }
+
+                        .spinner-dot:nth-child(4) {
+                              animation-delay: 0.16s;
+                        }
+
+                        @keyframes spinner-bounce {
+                              0%, 80%, 100% {
+                                    transform: scale(0.8);
+                                    opacity: 0.5;
+                              }
+                              40% {
+                                    transform: scale(1);
+                                    opacity: 1;
+                              }
+                        }
+
+                        @media (max-width: 480px) {
+                              .spinner {
+                                    width: 32px;
+                                    height: 8px;
+                              }
+
+                              .spinner-dot {
+                                    width: 6px;
+                                    height: 6px;
+                              }
+                        }
+                  `}</style>
             </>
       );
 }

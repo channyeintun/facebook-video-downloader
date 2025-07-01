@@ -3,7 +3,6 @@ import React from "react";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 import {
     Modal,
-    Spinner,
     NetworkMonitor,
     MediaOptions,
     VideoPlayer,
@@ -232,6 +231,8 @@ export default class Home extends React.Component {
     };
 
     selectMedia = (e) => {
+        console.log('selectMedia called with:', e.target.value);
+        console.log('Current resolutions:', this.state.resolutions.length);
         this.update({
             selectedQuality: e.target.value,
         });
@@ -263,285 +264,567 @@ export default class Home extends React.Component {
         return (
             <>
                 <div className="container">
-                    {this.state.isSupported ? (
-                        <>
-                            <h1>Facebook Video Downloader</h1>
-                            <textarea
-                                value={this.state.resourceStr}
-                                className="input-box"
-                                placeholder="view-source:video_link, select all codes, copy and paste here"
-                                onChange={this.onChangeInput}
-                            ></textarea>
-
-                            {this.state.loading ? (
-                                <button
-                                    onClick={this.cancelDownload}
-                                    className="check-button"
-                                >
-                                    Cancel
-                                </button>
-                            ) : this.state.videoSrc ? (
-                                <button
-                                    onClick={this.cleanVideo}
-                                    className="check-button"
-                                >
-                                    Clear
-                                </button>
-                            ) : (
-                                <div style={{ minWidth: 380 }} className="flex items-center gap-3">
-                                    <button
-                                        onClick={this.checkHDhandler}
-                                        className="check-button flex-grow"
-                                    >
-                                        Check Media
-                                    </button>
-                                    <input
-                                        id="proxy"
-                                        checked={this.state.proxy}
-                                        onChange={(e) =>
-                                            this.setState({ proxy: e.target.checked })
-                                        }
-                                        type="checkbox"
-                                    />
-                                    <label
-                                        style={{
-                                            color: "black",
-                                        }}
-                                        htmlFor="proxy"
-                                    >
-                                        <abbr title="If download has stopped, enable proxy">
-                                            Proxy
-                                        </abbr>
+                    <div className="main-content">
+                        {this.state.isSupported ? (
+                            <>
+                                <div className="header">
+                                    <h1>Facebook Video Downloader</h1>
+                                    <p className="subtitle">Download Facebook videos in HD quality with audio</p>
+                                </div>
+                                
+                                <div className="input-section">
+                                    <label htmlFor="source-input" className="input-label">
+                                        Paste Facebook video source code:
                                     </label>
+                                    <textarea
+                                        id="source-input"
+                                        value={this.state.resourceStr}
+                                        className="input-box"
+                                        placeholder="Go to the Facebook video → Right click → View page source → Select all (Ctrl+A) → Copy → Paste here"
+                                        onChange={this.onChangeInput}
+                                    ></textarea>
                                 </div>
-                            )}
 
-                            <div className="status">
-                                <div>{this.state.loading && <Spinner />}</div>
-                                <div>
-                                    {this.state.loading && (
-                                        <NetworkMonitor
-                                            contentLength={contentLengthInMB}
-                                            chunkSize={chunkSizeInMB}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                            {this.state.error && (
-                                <div className="error">{this.state.error}</div>
-                            )}
-                            {this.state.videoSrc && (
-                                <div className="save-to-device">
-                                    <input
-                                        value={this.state.fileName}
-                                        onChange={(e) =>
-                                            this.update({
-                                                fileName: e.target.value,
-                                            })
-                                        }
-                                        className="file-name"
-                                        placeholder="File Name"
-                                    />
-                                    {this.state.fileName ? (
-                                        <a
-                                            className="save-button"
-                                            href={this.state.videoSrc}
-                                            download={this.state.fileName}
+                                <div className="action-section">
+                                    {this.state.loading ? (
+                                        <button
+                                            onClick={this.cancelDownload}
+                                            className="action-button cancel-button"
                                         >
-                                            <SaveIcon />
-                                        </a>
+                                            Cancel Download
+                                        </button>
+                                    ) : this.state.videoSrc ? (
+                                        <button
+                                            onClick={this.cleanVideo}
+                                            className="action-button clear-button"
+                                        >
+                                            Start New Download
+                                        </button>
                                     ) : (
-                                        <a className="save-button">
-                                            <SaveIcon />
-                                        </a>
+                                        <div className="check-section">
+                                            <button
+                                                onClick={this.checkHDhandler}
+                                                className="action-button primary-button"
+                                                disabled={!this.state.resourceStr.trim()}
+                                            >
+                                                Check Available Media
+                                            </button>
+                                            <div className="proxy-option">
+                                                <input
+                                                    id="proxy"
+                                                    checked={this.state.proxy}
+                                                    onChange={(e) =>
+                                                        this.setState({ proxy: e.target.checked })
+                                                    }
+                                                    type="checkbox"
+                                                    className="proxy-checkbox"
+                                                />
+                                                <label htmlFor="proxy" className="proxy-label">
+                                                    <span>Use Proxy</span>
+                                                    <small>(Enable if download fails)</small>
+                                                </label>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                            )}
-                            <VideoPlayer videoSrc={this.state.videoSrc} />
-                        </>
-                    ) : this.state.isLoaded ? (
-                        <h1>Your browser is not supported.</h1>
-                    ) : (
-                        <h2>Loading ...</h2>
-                    )}
+
+                                {this.state.loading && (
+                                    <div className="progress-section">
+                                        <div className="progress-content">
+                                            <div className="progress-text">
+                                                <p>Downloading and processing video...</p>
+                                                <NetworkMonitor
+                                                    contentLength={contentLengthInMB}
+                                                    chunkSize={chunkSizeInMB}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {this.state.error && (
+                                    <div className="error-section">
+                                        <div className="error-content">
+                                            <h3>Error</h3>
+                                            <p>{this.state.error}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {this.state.videoSrc && (
+                                    <div className="result-section">
+                                        <div className="download-section">
+                                            <h3>Download Video</h3>
+                                            <div className="save-controls">
+                                                <input
+                                                    value={this.state.fileName}
+                                                    onChange={(e) =>
+                                                        this.update({
+                                                            fileName: e.target.value,
+                                                        })
+                                                    }
+                                                    className="file-name-input"
+                                                    placeholder="Enter filename (without extension)"
+                                                />
+                                                {this.state.fileName ? (
+                                                    <a
+                                                        className="download-button"
+                                                        href={this.state.videoSrc}
+                                                        download={this.state.fileName + '.mp4'}
+                                                    >
+                                                        <SaveIcon />
+                                                        Download
+                                                    </a>
+                                                ) : (
+                                                    <button className="download-button disabled">
+                                                        <SaveIcon />
+                                                        Download
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <VideoPlayer videoSrc={this.state.videoSrc} />
+                                    </div>
+                                )}
+                            </>
+                        ) : this.state.isLoaded ? (
+                            <div className="error-section">
+                                <h1>Browser Not Supported</h1>
+                                <p>Please use a modern browser that supports SharedArrayBuffer.</p>
+                            </div>
+                        ) : (
+                            <div className="loading-section">
+                                <h2>Loading application...</h2>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <Modal visible={this.state.isModalVisible}>
-                    <h2 className="modal-title">Select Resolution</h2>
-                    <MediaOptions
-                        resolutions={this.state.resolutions}
-                        selectMedia={this.selectMedia}
-                    />
-                    <div className="modal-footer">
-                        <button onClick={this.hideModal} className="cancel">
-                            Cancel
-                        </button>
-                        <button
-                            className={
-                                this.state.loading || !this.state.selectedQuality
-                                    ? "button disabled"
-                                    : "button"
-                            }
-                            onClick={this.extractLinkHandler}
-                            disabled={
-                                this.state.loading || !this.state.selectedQuality
-                            }
-                        >
-                            Download
-                        </button>
+                    <div className="modal-content">
+                        <h2 className="modal-title">Select Video Quality</h2>
+                        <p className="modal-subtitle">Choose the quality you want to download</p>
+                        <MediaOptions
+                            resolutions={this.state.resolutions}
+                            selectMedia={this.selectMedia}
+                            selectedQuality={this.state.selectedQuality}
+                        />
+                        <div className="modal-footer">
+                            <button onClick={this.hideModal} className="modal-button secondary">
+                                Cancel
+                            </button>
+                            <button
+                                className={`modal-button primary ${
+                                    this.state.loading || !this.state.selectedQuality ? "disabled" : ""
+                                }`}
+                                onClick={this.extractLinkHandler}
+                                disabled={this.state.loading || !this.state.selectedQuality}
+                            >
+                                {this.state.loading ? "Processing..." : "Download Selected"}
+                            </button>
+                        </div>
                     </div>
                 </Modal>
                 <style jsx>{`
                     .container {
-                        width: 100vw;
                         min-height: 100vh;
-                        padding: 100px 0.5rem 0;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: flex-start;
-                        align-items: center;
-                        background: #ffffff;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 2rem 1rem;
+                    }
+
+                    .main-content {
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 20px;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                        overflow: hidden;
+                    }
+
+                    .header {
+                        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+                        color: white;
+                        padding: 3rem 2rem;
+                        text-align: center;
+                    }
+
+                    .header h1 {
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        margin: 0 0 0.5rem 0;
                         color: white;
                     }
 
+                    .subtitle {
+                        font-size: 1.1rem;
+                        opacity: 0.9;
+                        margin: 0;
+                    }
+
+                    .input-section {
+                        padding: 2rem;
+                    }
+
+                    .input-label {
+                        display: block;
+                        font-weight: 600;
+                        color: #374151;
+                        margin-bottom: 0.5rem;
+                        font-size: 1rem;
+                    }
+
                     .input-box {
-                        margin: 10px 0;
-                        border: none;
-                        outline: none;
-                        border-radius: 5px;
-                        min-width: 380px;
-                        min-height: 120px;
-                        color: black;
-                        padding: 8px;
-                        background: #e8eded;
-                    }
-                    .check-button {
-                        margin: 10px 0;
-                        min-height: 40px;
-                        border: none;
-                        outline: none;
-                        border-radius: 5px;
-                        background: #0a2342;
-                        color: white;
-                        text-align: center;
-                        cursor: pointer;
-                    }
-                    .check-button:hover,
-                    .save-button:hover {
-                        filter: brightness(1.5);
-                        transition: filter 300ms;
-                    }
-                    .status {
-                        color: #0b0a0a;
-                        min-width: 380px;
-                        min-height: 0px;
-                        box-sizing: border-box;
-                        display: grid;
-                        grid-template: auto / repeat(2, 1fr);
-                        align-items: center;
-                        gap: 25px;
-                    }
-                    .modal-footer {
                         width: 100%;
-                        padding: 1rem 0;
-                        display: flex;
-                        justify-content: space-between;
-                        gap: 20px;
+                        min-height: 140px;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 12px;
+                        padding: 1rem;
+                        font-size: 0.95rem;
+                        color: #374151;
+                        background: #f9fafb;
+                        resize: vertical;
+                        transition: all 0.3s ease;
+                        font-family: inherit;
                     }
-                    .button {
-                        min-width: 80px;
-                        padding: 10px 25px;
-                        border-radius: 5px;
+
+                    .input-box:focus {
+                        outline: none;
+                        border-color: #4f46e5;
+                        background: white;
+                        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                    }
+
+                    .action-section {
+                        padding: 0 2rem 2rem;
+                    }
+
+                    .check-section {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
+
+                    .action-button {
+                        width: 100%;
+                        padding: 1rem 2rem;
+                        border: none;
+                        border-radius: 12px;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                    }
+
+                    .primary-button {
+                        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
                         color: white;
-                        background: #293241;
+                    }
+
+                    .primary-button:hover:not(:disabled) {
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+                    }
+
+                    .primary-button:disabled {
+                        background: #9ca3af;
+                        cursor: not-allowed;
+                        transform: none;
+                        box-shadow: none;
+                    }
+
+                    .cancel-button {
+                        background: #ef4444;
+                        color: white;
+                    }
+
+                    .cancel-button:hover {
+                        background: #dc2626;
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+                    }
+
+                    .clear-button {
+                        background: #10b981;
+                        color: white;
+                    }
+
+                    .clear-button:hover {
+                        background: #059669;
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+                    }
+
+                    .proxy-option {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+                        padding: 1rem;
+                        background: #f3f4f6;
+                        border-radius: 12px;
+                    }
+
+                    .proxy-checkbox {
+                        width: 1.25rem;
+                        height: 1.25rem;
+                        accent-color: #4f46e5;
+                    }
+
+                    .proxy-label {
+                        display: flex;
+                        flex-direction: column;
+                        color: #374151;
+                        cursor: pointer;
+                    }
+
+                    .proxy-label small {
+                        color: #6b7280;
+                        font-size: 0.85rem;
+                    }
+
+                    .progress-section {
+                        padding: 2rem;
+                        background: #f8fafc;
+                        border-top: 1px solid #e2e8f0;
+                    }
+
+                    .progress-content {
+                        display: flex;
+                        align-items: center;
+                        gap: 1.5rem;
+                        justify-content: center;
+                        flex-direction: column;
+                    }
+
+                    .progress-text {
                         text-align: center;
+                    }
+
+                    .progress-text p {
+                        color: #475569;
+                        font-weight: 500;
+                        margin: 0 0 1rem 0;
+                        font-size: 1.1rem;
+                    }
+
+                    .error-section {
+                        padding: 2rem;
+                        background: #fef2f2;
+                        border-top: 1px solid #fecaca;
+                    }
+
+                    .error-content {
+                        text-align: center;
+                        color: #dc2626;
+                    }
+
+                    .error-content h3 {
+                        margin: 0 0 0.5rem 0;
+                        color: #dc2626;
+                    }
+
+                    .error-content p {
+                        margin: 0;
+                        color: #991b1b;
+                    }
+
+                    .result-section {
+                        padding: 2rem;
+                        background: #f0fdf4;
+                        border-top: 1px solid #bbf7d0;
+                    }
+
+                    .download-section h3 {
+                        color: #166534;
+                        margin: 0 0 1rem 0;
+                        text-align: center;
+                    }
+
+                    .save-controls {
+                        display: flex;
+                        gap: 1rem;
+                        margin-bottom: 2rem;
+                    }
+
+                    .file-name-input {
+                        flex: 1;
+                        padding: 0.75rem 1rem;
+                        border: 2px solid #d1fae5;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        color: #374151;
+                    }
+
+                    .file-name-input:focus {
+                        outline: none;
+                        border-color: #10b981;
+                        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+                    }
+
+                    .download-button {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        padding: 0.75rem 1.5rem;
+                        background: #10b981;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
                         border: none;
                         cursor: pointer;
                     }
-                    .cancel {
-                        min-width: 80px;
-                        padding: 10px 25px;
-                        border-radius: 5px;
-                        color: #293241;
-                        background: transparent;
-                        text-align: center;
-                        border: 1px solid #293241;
-                        cursor: pointer;
+
+                    .download-button:hover:not(.disabled) {
+                        background: #059669;
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
                     }
-                    .button:hover {
-                        filter: brightness(1.3);
-                        transition: filter 300ms;
-                    }
-                    .disabled {
-                        filter: brightness(1) !important;
-                        background: #8d99ae !important;
+
+                    .download-button.disabled {
+                        background: #9ca3af;
                         cursor: not-allowed;
+                        transform: none;
+                        box-shadow: none;
                     }
-                    .save-to-device {
-                        min-width: 380px;
-                        height: 30px;
-                        display: flex;
-                        justify-content: space-between;
-                        gap: 5px;
-                        box-sizing: border-box;
-                    }
-                    .file-name {
-                        width: calc(100% - 25px);
-                        height: 100%;
-                        padding: 0 8px;
-                    }
-                    .flex {
-                        display: flex;
-                    }
-                    .flex-grow {
-                        flex-grow: 1;
-                    }
-                    .items-center {
-                        align-items: center;
-                    }
-                    .gap-3 {
-                        gap: 12px;
-                    }
-                    .save-button {
-                        min-width: 25px;
-                        height: 100%;
-                        padding: 5px;
-                        background: #0a2342;
-                        border-radius: 5px;
-                        text-decoration: none;
-                        color: white;
+
+                    .loading-section {
+                        padding: 4rem 2rem;
                         text-align: center;
-                        cursor: pointer;
+                        color: #374151;
                     }
-                    .error {
-                        color: red;
-                        padding: 8px 4px;
-                        text-align: left;
-                        width: 380px;
+
+                    .loading-section h2 {
+                        margin: 1rem 0 0 0;
+                        color: #374151;
+                        font-weight: 500;
                     }
+
+                    .modal-content {
+                        min-width: 500px;
+                        max-width: 90vw;
+                    }
+
                     .modal-title {
+                        color: #1f2937;
                         text-align: center;
+                        margin: 0 0 0.5rem 0;
+                        font-size: 1.5rem;
+                    }
+
+                    .modal-subtitle {
+                        color: #6b7280;
+                        text-align: center;
+                        margin: 0 0 1.5rem 0;
+                    }
+
+                    .modal-footer {
+                        display: flex;
+                        gap: 1rem;
+                        margin-top: 2rem;
+                        justify-content: flex-end;
+                    }
+
+                    .modal-button {
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        border: none;
+                    }
+
+                    .modal-button.primary {
+                        background: #4f46e5;
+                        color: white;
+                    }
+
+                    .modal-button.primary:hover:not(.disabled) {
+                        background: #4338ca;
+                        transform: translateY(-1px);
+                    }
+
+                    .modal-button.primary.disabled {
+                        background: #9ca3af;
+                        cursor: not-allowed;
+                        transform: none;
+                    }
+
+                    .modal-button.secondary {
+                        background: transparent;
+                        color: #374151;
+                        border: 2px solid #d1d5db;
+                    }
+
+                    .modal-button.secondary:hover {
+                        background: #f3f4f6;
+                        border-color: #9ca3af;
+                    }
+
+                    @media (max-width: 768px) {
+                        .container {
+                            padding: 1rem 0.5rem;
+                        }
+
+                        .header {
+                            padding: 2rem 1rem;
+                        }
+
+                        .header h1 {
+                            font-size: 2rem;
+                        }
+
+                        .input-section,
+                        .action-section,
+                        .progress-section,
+                        .error-section,
+                        .result-section {
+                            padding: 1.5rem 1rem;
+                        }
+
+                        .modal-content {
+                            min-width: auto;
+                            width: 90vw;
+                        }
+
+                        .save-controls {
+                            flex-direction: column;
+                        }
+
+                        .modal-footer {
+                            flex-direction: column;
+                        }
                     }
                 `}</style>
 
                 <style jsx global>{`
                     * {
                         margin: 0;
+                        padding: 0;
                         box-sizing: border-box;
                     }
-                    h1,
-                    h2 {
-                        color: #0b0a0a;
+
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #1f2937;
+                        background: #f9fafb;
                     }
+
+                    h1, h2, h3, h4, h5, h6 {
+                        font-weight: 700;
+                        line-height: 1.2;
+                    }
+
+                    button, input, textarea, select {
+                        font-family: inherit;
+                    }
+
                     .hide {
                         display: none !important;
-                    }
-                    @media (max-width: 480px) {
-                        .check-button,
-                        .input-box,
-                        .status,
-                        .video-player {
-                            min-width: 350px;
-                        }
                     }
                 `}</style>
             </>
