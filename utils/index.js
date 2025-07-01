@@ -231,6 +231,52 @@ export function extractMediaUrls(htmlStr) {
     return result;
 }
 
+export function extractThumbnail(htmlStr) {
+    let jsonData;
+    
+    try {
+        // First try to parse as direct JSON
+        jsonData = JSON.parse(htmlStr);
+    } catch (e) {
+        // If not direct JSON, try to extract from HTML
+        jsonData = extractJsonFromHtml(htmlStr);
+    }
+
+    // Try to find thumbnail from the data structure
+    if (jsonData.data && 
+        jsonData.data.video && 
+        jsonData.data.video.story && 
+        jsonData.data.video.story.attachments && 
+        jsonData.data.video.story.attachments.length > 0) {
+        
+        const media = jsonData.data.video.story.attachments[0].media;
+        if (media && media.preferred_thumbnail && media.preferred_thumbnail.image && media.preferred_thumbnail.image.uri) {
+            return media.preferred_thumbnail.image.uri;
+        }
+    }
+
+    // Fallback: try to find any video thumbnail in the JSON
+    const thumbnailPatterns = [
+        /preferred_thumbnail[^}]*image[^}]*uri["']\s*:\s*["']([^"']+)["']/,
+        /thumbnail[^}]*uri["']\s*:\s*["']([^"']+)["']/,
+        /image[^}]*uri["']\s*:\s*["']([^"']+)["']/
+    ];
+
+    const jsonStr = typeof htmlStr === 'string' ? htmlStr : JSON.stringify(jsonData);
+    
+    for (const pattern of thumbnailPatterns) {
+        const match = jsonStr.match(pattern);
+        if (match && match[1]) {
+            // Make sure it's a valid image URL
+            if (match[1].includes('fbcdn.net') && (match[1].includes('.jpg') || match[1].includes('.png'))) {
+                return match[1];
+            }
+        }
+    }
+
+    return null;
+}
+
 // Legacy functions for backward compatibility
 export function getIds(resourceStr) {
     const pattern = /"dash_prefetch_experimental":\[\s*"(\d+v)",\s*"(\d+a)"\s*\]/;

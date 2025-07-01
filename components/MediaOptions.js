@@ -1,44 +1,58 @@
-export function MediaOptions({ resolutions = [], selectMedia, selectedQuality }) {
-    console.log('MediaOptions rendered with:', { resolutions: resolutions.length, selectedQuality });
+export function MediaOptions({ resolutions = [], selectMedia, selectedQuality, thumbnail }) {
+    console.log('MediaOptions rendered with:', { resolutions: resolutions.length, selectedQuality, thumbnail });
     
     return (
         <>
             <div className="media-options">
                 {resolutions.length > 0 ? (
-                    resolutions.map((res) => (
-                        <div key={res.key} className={`resolution-card ${selectedQuality === res.key ? 'selected' : ''}`}>
-                            <div className="card-header">
-                                <label className="radio-label" htmlFor={res.key}>
-                                    <input
-                                        id={res.key}
-                                        type="radio"
-                                        name="media"
-                                        onChange={selectMedia}
-                                        value={res.key}
-                                        checked={selectedQuality === res.key}
-                                        className="radio-input"
-                                    />
-                                    <span className="radio-custom"></span>
-                                    <div className="quality-info">
-                                        <span className="quality-label">
-                                            {res.qualityClass === "hd" ? "High Definition" : "Standard Definition"}
-                                        </span>
-                                        <span className="quality-class">{res.qualityClass.toUpperCase()}</span>
-                                    </div>
-                                </label>
-                            </div>
-                            <div className="video-preview">
-                                <video
-                                    src={'/api/proxy?url=' + encodeURIComponent(res.url)}
-                                    className="preview-video"
-                                    controls
-                                    preload="metadata"
-                                    muted
-                                    poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e5e7eb'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E"
+                    <div className="media-container">
+                        {/* Single Thumbnail Preview */}
+                        <div className="thumbnail-section">
+                            {thumbnail ? (
+                                <img
+                                    src={thumbnail}
+                                    alt="Video Preview"
+                                    className="main-thumbnail"
+                                    loading="lazy"
                                 />
+                            ) : (
+                                <div className="no-thumbnail">
+                                    <div className="thumbnail-placeholder">📹</div>
+                                    <span>No Preview Available</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Quality Selection Controls */}
+                        <div className="quality-controls">
+                            <h4 className="quality-title">Choose Quality:</h4>
+                            <div className="quality-buttons">
+                                {resolutions.map((res) => (
+                                    <label 
+                                        key={res.key} 
+                                        className={`quality-option ${selectedQuality === res.key ? 'selected' : ''}`}
+                                        htmlFor={res.key}
+                                    >
+                                        <input
+                                            id={res.key}
+                                            type="radio"
+                                            name="media"
+                                            onChange={selectMedia}
+                                            value={res.key}
+                                            checked={selectedQuality === res.key}
+                                            className="quality-input"
+                                        />
+                                        <div className="quality-button">
+                                            <span className="quality-badge">{res.qualityClass.toUpperCase()}</span>
+                                            <span className="quality-description">
+                                                {res.qualityClass === "hd" ? "High Definition" : "Standard Definition"}
+                                            </span>
+                                        </div>
+                                    </label>
+                                ))}
                             </div>
                         </div>
-                    ))
+                    </div>
                 ) : (
                     <div className="no-media">
                         <div className="no-media-icon">📹</div>
@@ -51,111 +65,136 @@ export function MediaOptions({ resolutions = [], selectMedia, selectedQuality })
                 .media-options {
                     max-height: 60vh;
                     overflow-y: auto;
-                    padding: 0.5rem 0;
-                    display: grid;
-                    gap: 1rem;
+                    padding: 1rem;
                     min-height: 200px;
                 }
 
-                .resolution-card {
-                    border: 2px solid #e5e7eb;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    transition: all 0.3s ease;
-                    background: white;
-                    position: relative;
-                    min-height: fit-content;
-                }
-
-                .resolution-card:hover {
-                    border-color: #d1d5db;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                }
-
-                .resolution-card.selected {
-                    border-color: #4f46e5;
-                    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-                }
-
-                .card-header {
-                    padding: 1rem;
-                    background: #f9fafb;
-                    border-bottom: 1px solid #e5e7eb;
-                }
-
-                .radio-label {
+                .media-container {
                     display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    cursor: pointer;
-                    font-weight: 500;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                    max-width: 500px;
+                    margin: 0 auto;
                 }
 
-                .radio-input {
+                .thumbnail-section {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+                .main-thumbnail {
+                    width: 100%;
+                    max-width: 400px;
+                    max-height: 250px;
+                    border-radius: 12px;
+                    object-fit: cover;
+                    background: #f3f4f6;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+
+                .main-thumbnail:hover {
+                    transform: scale(1.02);
+                    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+                }
+
+                .no-thumbnail {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    max-width: 400px;
+                    height: 200px;
+                    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+                    border: 2px dashed #d1d5db;
+                    border-radius: 12px;
+                    color: #6b7280;
+                }
+
+                .thumbnail-placeholder {
+                    font-size: 3rem;
+                    margin-bottom: 0.5rem;
+                    opacity: 0.6;
+                }
+
+                .quality-controls {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 1.5rem;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                    border: 1px solid #e5e7eb;
+                }
+
+                .quality-title {
+                    margin: 0 0 1rem 0;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #374151;
+                    text-align: center;
+                }
+
+                .quality-buttons {
+                    display: flex;
+                    gap: 1rem;
+                    justify-content: center;
+                }
+
+                .quality-option {
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .quality-input {
                     position: absolute;
                     opacity: 0;
                     pointer-events: none;
                 }
 
-                .radio-custom {
-                    width: 1.25rem;
-                    height: 1.25rem;
-                    border: 2px solid #d1d5db;
-                    border-radius: 50%;
-                    position: relative;
-                    transition: all 0.2s ease;
-                    flex-shrink: 0;
-                }
-
-                .resolution-card.selected .radio-custom {
-                    border-color: #4f46e5;
-                    background: #4f46e5;
-                }
-
-                .resolution-card.selected .radio-custom::after {
-                    content: '';
-                    width: 6px;
-                    height: 6px;
-                    background: white;
-                    border-radius: 50%;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                }
-
-                .quality-info {
+                .quality-button {
                     display: flex;
                     flex-direction: column;
-                    gap: 0.25rem;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 1rem 1.5rem;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 10px;
+                    background: white;
+                    transition: all 0.2s ease;
+                    min-width: 120px;
                 }
 
-                .quality-label {
+                .quality-option:hover .quality-button {
+                    border-color: #d1d5db;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+
+                .quality-option.selected .quality-button {
+                    border-color: #4f46e5;
+                    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+                    color: white;
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+                }
+
+                .quality-badge {
                     font-size: 1rem;
-                    color: #1f2937;
-                    font-weight: 600;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
                 }
 
-                .quality-class {
-                    font-size: 0.875rem;
-                    color: #6b7280;
+                .quality-description {
+                    font-size: 0.8rem;
                     font-weight: 500;
+                    text-align: center;
+                    opacity: 0.8;
+                    line-height: 1.2;
                 }
 
-                .video-preview {
-                    padding: 1rem;
-                }
-
-                .preview-video {
-                    width: 100%;
-                    max-height: 200px;
-                    border-radius: 8px;
-                    background: #f3f4f6;
-                    outline: none;
-                }
-
-                .preview-video:focus {
-                    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                .quality-option.selected .quality-description {
+                    opacity: 0.9;
                 }
 
                 .no-media {
@@ -200,28 +239,63 @@ export function MediaOptions({ resolutions = [], selectMedia, selectedQuality })
                 }
 
                 @media (max-width: 768px) {
-                    .card-header {
+                    .media-container {
+                        max-width: 100%;
+                    }
+
+                    .quality-controls {
+                        padding: 1rem;
+                    }
+
+                    .quality-buttons {
+                        flex-direction: column;
+                        gap: 0.75rem;
+                    }
+
+                    .quality-button {
+                        flex-direction: row;
+                        justify-content: space-between;
+                        min-width: unset;
+                        width: 100%;
+                        padding: 0.875rem 1rem;
+                    }
+
+                    .quality-description {
+                        font-size: 0.75rem;
+                    }
+
+                    .main-thumbnail {
+                        max-height: 200px;
+                    }
+
+                    .no-thumbnail {
+                        height: 150px;
+                    }
+
+                    .thumbnail-placeholder {
+                        font-size: 2.5rem;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .media-options {
+                        padding: 0.5rem;
+                    }
+
+                    .quality-controls {
+                        padding: 0.875rem;
+                    }
+
+                    .quality-title {
+                        font-size: 1rem;
+                    }
+
+                    .quality-button {
                         padding: 0.75rem;
                     }
 
-                    .video-preview {
-                        padding: 0.75rem;
-                    }
-
-                    .preview-video {
-                        max-height: 150px;
-                    }
-
-                    .radio-label {
-                        gap: 0.5rem;
-                    }
-
-                    .quality-label {
+                    .quality-badge {
                         font-size: 0.9rem;
-                    }
-
-                    .quality-class {
-                        font-size: 0.8rem;
                     }
                 }
             `}</style>

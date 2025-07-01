@@ -14,6 +14,7 @@ import {
     extractVideoLinks,
     extractAudioLink,
     extractTitle,
+    extractThumbnail,
 } from "../utils";
 
 export default class Home extends React.Component {
@@ -32,6 +33,7 @@ export default class Home extends React.Component {
         error: "",
         controller: null,
         proxy: false,
+        thumbnail: null,
     };
 
     update = (newObj) => {
@@ -129,6 +131,8 @@ export default class Home extends React.Component {
     checkHDhandler = () => {
         try {
             const links = extractVideoLinks(this.state.resourceStr);
+            const thumbnail = extractThumbnail(this.state.resourceStr);
+            
             const resolutions = links.map((item, index) => ({
                 videoId: item.videoId,
                 qualityClass: item.qualityClass,
@@ -139,6 +143,7 @@ export default class Home extends React.Component {
             
             this.update({
                 resolutions,
+                thumbnail,
                 isModalVisible: true,
             });
         } catch (error) {
@@ -407,6 +412,7 @@ export default class Home extends React.Component {
                             resolutions={this.state.resolutions}
                             selectMedia={this.selectMedia}
                             selectedQuality={this.state.selectedQuality}
+                            thumbnail={this.state.thumbnail}
                         />
                         <div className="modal-footer">
                             <button onClick={this.hideModal} className="modal-button secondary">
