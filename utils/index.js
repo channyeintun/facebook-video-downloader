@@ -83,6 +83,155 @@ export function solveCors(link) {
     return link.replace(regex, ".xx");
 }
 
+function extractCompleteJsonObject(str, startIndex) {
+    let braceCount = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = startIndex; i < str.length; i++) {
+        const char = str[i];
+
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+
+        if (char === '\\' && inString) {
+            escaped = true;
+            continue;
+        }
+
+        if (char === '"') {
+            inString = !inString;
+            continue;
+        }
+
+        if (!inString) {
+            if (char === '{') {
+                braceCount++;
+            } else if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    return str.substring(startIndex, i + 1);
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+export function extractJsonFromHtml(htmlStr) {
+    // Try to find JSON data in script tags first
+    const scriptPattern = /<script[^>]*type=["']application\/json["'][^>]*>([^<]+)<\/script>/g;
+    let match;
+
+    while ((match = scriptPattern.exec(htmlStr)) !== null) {
+        try {
+            const jsonStr = match[1];
+            const parsed = JSON.parse(jsonStr);
+
+            // Check if this JSON has the structure we need
+            if (parsed.extensions &&
+                parsed.extensions.all_video_dash_prefetch_representations &&
+                parsed.extensions.all_video_dash_prefetch_representations.length > 0) {
+                return parsed;
+            }
+
+            if (parsed.data && parsed.extensions &&
+                parsed.extensions.all_video_dash_prefetch_representations &&
+                parsed.extensions.all_video_dash_prefetch_representations.length > 0) {
+                return parsed;
+            }
+        } catch (e) {
+            // Continue trying other matches
+            continue;
+        }
+    }
+
+    // If no JSON found in script tags, try to extract from the entire HTML
+    // Look for the extensions pattern and extract the complete JSON object
+    const extensionsPattern = /"extensions":\s*\{/g;
+    let extensionsMatch;
+
+    while ((extensionsMatch = extensionsPattern.exec(htmlStr)) !== null) {
+        const startIndex = extensionsMatch.index + extensionsMatch[0].length - 1; // Start from the opening brace
+        const completeJson = extractCompleteJsonObject(htmlStr, startIndex);
+
+        if (completeJson) {
+            try {
+                const extensionsData = JSON.parse(completeJson);
+                if (extensionsData.all_video_dash_prefetch_representations &&
+                    extensionsData.all_video_dash_prefetch_representations.length > 0) {
+                    return { extensions: extensionsData };
+                }
+            } catch (e) {
+                console.error("Failed to parse extensions data:", e);
+                continue;
+            }
+        }
+    }
+
+    throw new Error("Could not extract JSON data from HTML");
+}
+
+export function extractMediaUrls(htmlStr) {
+    let jsonData;
+
+    jsonData = extractJsonFromHtml(htmlStr);
+
+    if (!jsonData.extensions ||
+        !jsonData.extensions.all_video_dash_prefetch_representations ||
+        jsonData.extensions.all_video_dash_prefetch_representations.length === 0) {
+        throw new Error("No video representations found in the data");
+    }
+
+    const representations = jsonData.extensions.all_video_dash_prefetch_representations[0].representations;
+
+    if (!representations || representations.length === 0) {
+        throw new Error("No representations found");
+    }
+
+    // Separate video and audio representations
+    const videoReps = representations.filter(rep => rep.mime_type === "video/mp4");
+    const audioReps = representations.filter(rep => rep.mime_type === "audio/mp4");
+
+    if (videoReps.length === 0) {
+        throw new Error("No video representations found");
+    }
+
+    if (audioReps.length === 0) {
+        throw new Error("No audio representations found");
+    }
+
+    // Sort video representations by bandwidth
+    videoReps.sort((a, b) => a.bandwidth - b.bandwidth);
+
+    // Get SD (lowest bandwidth) and HD (highest bandwidth)
+    const sdVideo = videoReps[0];
+    const hdVideo = videoReps[videoReps.length - 1];
+
+    // Get audio URL (there should be only one)
+    const audioUrl = solveCors(audioReps[0].base_url);
+
+    const result = [
+        {
+            type: "sd",
+            videoUrl: solveCors(sdVideo.base_url),
+            audioUrl: audioUrl
+        },
+        {
+            type: "hd",
+            videoUrl: solveCors(hdVideo.base_url),
+            audioUrl: audioUrl
+        }
+    ];
+
+    console.log("Extracted media URLs:", result);
+    return result;
+}
+
+// Legacy functions for backward compatibility
 export function getIds(resourceStr) {
     const pattern = /"dash_prefetch_experimental":\[\s*"(\d+v)",\s*"(\d+a)"\s*\]/;
     const match = resourceStr.match(pattern);
@@ -97,65 +246,88 @@ export function getIds(resourceStr) {
 }
 
 export function extractVideoLinks(str) {
-    const { videoId } = getIds(str);
-    console.log("videoId:", videoId);
+    try {
+        // Try new method first
+        const mediaUrls = extractMediaUrls(str);
+        return mediaUrls.map((media, index) => ({
+            videoId: `${media.type}_${index}`,
+            qualityClass: media.type,
+            url: media.videoUrl,
+            key: `${media.type}_${index}`
+        }));
+    } catch (e) {
+        console.warn("New extraction method failed, falling back to legacy method:", e);
 
-    // Clean the entire input string
-    const cleaner = new Cleaner(str);
-    const cleanedStr = cleaner.clean().value;
+        // Fallback to legacy method
+        const { videoId } = getIds(str);
+        console.log("videoId:", videoId);
 
-    // Regex to match Representation blocks
-    const representationRegex = /<Representation\s+[^>]*id="(\d+v)"[^>]*FBQualityClass="([^"]+)"[^>]*FBQualityLabel="([^"]+)"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
-    const representations = [];
-    let match;
+        // Clean the entire input string
+        const cleaner = new Cleaner(str);
+        const cleanedStr = cleaner.clean().value;
 
-    // Collect all representation matches
-    while ((match = representationRegex.exec(cleanedStr)) !== null) {
-        console.log("Match found:", match);
-        console.log("Video ID in match:", match[1]);
-        representations.push({
-            videoId: match[1],
-            qualityClass: match[2],
-            qualityLabel: match[3],
-            url: solveCors(match[4]),
-        });
+        // Regex to match Representation blocks
+        const representationRegex = /<Representation\s+[^>]*id="(\d+v)"[^>]*FBQualityClass="([^"]+)"[^>]*FBQualityLabel="([^"]+)"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
+        const representations = [];
+        let match;
+
+        // Collect all representation matches
+        while ((match = representationRegex.exec(cleanedStr)) !== null) {
+            console.log("Match found:", match);
+            console.log("Video ID in match:", match[1]);
+            representations.push({
+                videoId: match[1],
+                qualityClass: match[2],
+                qualityLabel: match[3],
+                url: solveCors(match[4]),
+                key: `${match[2]}_${match[3]}_${representations.length}`
+            });
+        }
+
+        if (representations.length === 0) {
+            throw new Error("No video representations found");
+        }
+
+        console.log("result:", representations);
+        return representations;
     }
-
-    if (representations.length === 0) {
-        throw new Error("No video representations found");
-    }
-
-    console.log("result:", representations);
-
-    return representations;
 }
 
 export function extractAudioLink(str) {
-    const { audioId } = getIds(str);
-    console.log("audioId:", audioId);
+    try {
+        // Try new method first
+        const mediaUrls = extractMediaUrls(str);
+        return mediaUrls[0].audioUrl; // Both SD and HD use the same audio URL
+    } catch (e) {
+        console.warn("New extraction method failed, falling back to legacy method:", e);
 
-    // Clean the entire input string
-    const cleaner = new Cleaner(str);
-    const cleanedStr = cleaner.clean().value;
+        // Fallback to legacy method
+        const { audioId } = getIds(str);
+        console.log("audioId:", audioId);
 
-    // Regex to match audio Representation blocks
-    const audioRegex = /<Representation\s+[^>]*id="(\d+a)"[^>]*mimeType="audio\/mp4"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
-    let match;
-    let audioUrl = null;
+        // Clean the entire input string
+        const cleaner = new Cleaner(str);
+        const cleanedStr = cleaner.clean().value;
 
-    // Find the audio representation matching the audioId
-    while ((match = audioRegex.exec(cleanedStr)) !== null) {
-        if (match[1] === audioId) {
-            audioUrl = match[2];
-            break;
+        // Regex to match audio Representation blocks
+        const audioRegex = /<Representation\s+[^>]*id="(\d+a)"[^>]*mimeType="audio\/mp4"[^>]*>[\s\S]*?<BaseURL>(https:\/\/[^<]+)<\/BaseURL>/g;
+        let match;
+        let audioUrl = null;
+
+        // Find the audio representation matching the audioId
+        while ((match = audioRegex.exec(cleanedStr)) !== null) {
+            if (match[1] === audioId) {
+                audioUrl = match[2];
+                break;
+            }
         }
-    }
 
-    if (!audioUrl) {
-        throw new Error("No audio representation found for the specified audioId: " + audioId);
-    }
+        if (!audioUrl) {
+            throw new Error("No audio representation found for the specified audioId: " + audioId);
+        }
 
-    return solveCors(audioUrl);
+        return solveCors(audioUrl);
+    }
 }
 
 export function extractTitle(inputString) {

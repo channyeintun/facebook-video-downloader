@@ -20,7 +20,9 @@ export function MediaOptions({ resolutions = [], selectMedia, selectedQuality })
                                     />
                                     <span className="radio-custom"></span>
                                     <div className="quality-info">
-                                        <span className="quality-label">{res.qualityLabel}</span>
+                                        <span className="quality-label">
+                                            {res.qualityClass === "hd" ? "High Definition" : "Standard Definition"}
+                                        </span>
                                         <span className="quality-class">{res.qualityClass.toUpperCase()}</span>
                                     </div>
                                 </label>

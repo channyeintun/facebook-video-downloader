@@ -132,9 +132,9 @@ export default class Home extends React.Component {
             const resolutions = links.map((item, index) => ({
                 videoId: item.videoId,
                 qualityClass: item.qualityClass,
-                qualityLabel: item.qualityLabel,
+                qualityLabel: item.qualityLabel || (item.qualityClass === "hd" ? "HD Quality" : "SD Quality"),
                 url: item.url,
-                key: `${item.qualityClass}_${item.qualityLabel}_${index}`,
+                key: item.key || `${item.qualityClass}_${index}`,
             }));
             
             this.update({
