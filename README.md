@@ -1,9 +1,9 @@
 
-# Private Video Downloader For Facebook  
+# HD Video Downloader For Facebook  
 
 [![GPL 3.0 License](https://img.shields.io/badge/license-GPL%203.0-green)](https://github.com/channyeintun/facebook-video-downloader/blob/main/LICENSE) 
 
-Private videos in your facebook can be downloaded in mutiple resolutions (144p, 180p, 240p, 270p, 360p, 480p, 540p, 720p, 1080p). This app is mainly implemented for group videos. Therefore, videos across other places inside facebook except groups will not work properly. Everything about downloading the video and audio only happens in the browser. No backend service is used in this app. This app is only convenient to be used with a computer web browser - not convenient in smart phone web browsers.  
+All videos in your facebook can be downloaded in both standard definition and high definition qualities. Everything about downloading the video and audio only happens in the browser except when you enable the proxy.
 
 I have used FFMPEG Library with WASM
 
