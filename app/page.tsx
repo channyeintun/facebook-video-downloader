@@ -208,7 +208,7 @@ export default function Home() {
               <div className="p-8 sm:p-10 space-y-8">
                 <div className="space-y-4">
                   <label htmlFor="source-input" className="block text-sm font-medium text-gray-700">
-                    Video URL or Source Code
+                    Source Code
                   </label>
                   <div className="relative">
                     <textarea
