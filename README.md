@@ -19,7 +19,6 @@ A modern Next.js application for downloading Facebook videos in HD quality with 
 - **TypeScript**
 - **Tailwind CSS 4**
 - **FFmpeg.wasm 0.12.6** (with multi-threading support)
-- **styled-jsx** for component-scoped styles
 - **eslint-plugin-baseline-js** for JavaScript baseline compatibility
 
 ## 📋 Prerequisites

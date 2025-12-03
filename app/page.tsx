@@ -186,561 +186,208 @@ export default function Home() {
 
   return (
     <>
-      <div className="container">
-        <div className="main-content">
-          {isSupported ? (
-            <>
-              <div className="header">
-                <h1>Facebook Video Downloader</h1>
-                <p className="subtitle">
-                  Download Facebook videos in HD quality with audio
-                </p>
-                <div className="tech-badge">
-                  ✅ Multi-threaded Processing Enabled (SharedArrayBuffer)
-                </div>
+      <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-gray-900 selection:text-white">
+        <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
+              Facebook Video Downloader
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Download high-quality videos directly from Facebook. Fast, secure, and free.
+            </p>
+            {isSupported && (
+              <div className="mt-6 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-medium">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Multi-threaded Processing Active
               </div>
+            )}
+          </div>
 
-              <div className="input-section">
-                <label htmlFor="source-input" className="input-label">
-                  Paste Facebook video source code:
-                </label>
-                <textarea
-                  id="source-input"
-                  value={resourceStr}
-                  className="input-box"
-                  placeholder="Go to the Facebook video → Right click → View page source → Select all (Ctrl+A) → Copy → Paste here"
-                  onChange={onChangeInput}
-                ></textarea>
-              </div>
-
-              <div className="action-section">
-                {loading ? (
-                  <div className="loading-container">
-                    <div className="progress-bar-wrapper">
-                      <div
-                        className="progress-bar"
-                        style={{ width: `${progress}%` }}
-                      ></div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            {isSupported ? (
+              <div className="p-8 sm:p-10 space-y-8">
+                <div className="space-y-4">
+                  <label htmlFor="source-input" className="block text-sm font-medium text-gray-700">
+                    Video URL or Source Code
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      id="source-input"
+                      value={resourceStr}
+                      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm min-h-[160px] p-4 bg-gray-50 focus:bg-white transition-colors resize-y font-mono text-gray-600"
+                      placeholder="Paste the Facebook video source code here..."
+                      onChange={onChangeInput}
+                    ></textarea>
+                    <div className="absolute bottom-3 right-3 text-xs text-gray-400 font-medium">
+                      {resourceStr.length > 0 ? `${resourceStr.length} chars` : ''}
                     </div>
-                    <p className="progress-text">Processing: {progress}%</p>
-                    <button
-                      onClick={cancelDownload}
-                      className="action-button cancel-button"
-                    >
-                      Cancel Download
-                    </button>
                   </div>
-                ) : videoSrc ? (
-                  <button
-                    onClick={cleanVideo}
-                    className="action-button clear-button"
-                  >
-                    Start New Download
-                  </button>
-                ) : (
-                  <div className="check-section">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Right-click video page &rarr; View Page Source &rarr; Select All &rarr; Copy
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  {loading ? (
+                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 space-y-4">
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-900">
+                        <span>Processing...</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-black transition-all duration-300 ease-out rounded-full"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                      <button
+                        onClick={cancelDownload}
+                        className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : videoSrc ? (
                     <button
-                      onClick={checkHDhandler}
-                      className="action-button primary-button"
-                      disabled={!resourceStr.trim()}
+                      onClick={cleanVideo}
+                      className="w-full py-4 px-6 rounded-xl font-semibold text-white bg-black hover:bg-gray-800 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
                     >
-                      Check Available Media
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Download Another Video
                     </button>
-                    <div className="proxy-option">
-                      <input
-                        id="proxy"
-                        checked={proxy}
-                        onChange={(e) => setProxy(e.target.checked)}
-                        type="checkbox"
-                        className="proxy-checkbox"
-                      />
-                      <label htmlFor="proxy" className="proxy-label">
-                        <span>Use Proxy</span>
-                        <small>(Enable if download fails)</small>
-                      </label>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <button
+                        onClick={checkHDhandler}
+                        className="w-full py-4 px-6 rounded-xl font-semibold text-white bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
+                        disabled={!resourceStr.trim()}
+                      >
+                        Check Available Quality
+                      </button>
+
+                      <div className="flex items-center gap-3">
+                        <input
+                          id="proxy"
+                          checked={proxy}
+                          onChange={(e) => setProxy(e.target.checked)}
+                          type="checkbox"
+                          className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black cursor-pointer"
+                        />
+                        <label htmlFor="proxy" className="text-sm text-gray-600 cursor-pointer select-none">
+                          Use Proxy <span className="text-gray-400">(Enable if download fails)</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <h3 className="text-sm font-medium text-red-800">Error</h3>
+                      <p className="text-sm text-red-600 mt-1">{error}</p>
                     </div>
                   </div>
                 )}
-              </div>
 
-              {error && (
-                <div className="error-section">
-                  <div className="error-content">
-                    <h3>Error</h3>
-                    <p>{error}</p>
-                  </div>
-                </div>
-              )}
-
-              {videoSrc && (
-                <div className="result-section">
-                  <div className="download-section">
-                    <h3>Download Video</h3>
-                    <div className="save-controls">
-                      <input
-                        value={fileName}
-                        onChange={(e) => setFileName(e.target.value)}
-                        className="file-name-input"
-                        placeholder="Enter filename (without extension)"
-                      />
+                {videoSrc && (
+                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                    <div className="mb-6 flex flex-col sm:flex-row gap-4 items-end">
+                      <div className="flex-1 w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Filename</label>
+                        <input
+                          value={fileName}
+                          onChange={(e) => setFileName(e.target.value)}
+                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2.5"
+                          placeholder="video-filename"
+                        />
+                      </div>
                       {fileName ? (
                         <a
-                          className="download-button"
+                          className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
                           href={videoSrc}
                           download={fileName + '.mp4'}
                         >
-                          💾 Download
+                          Save MP4
                         </a>
                       ) : (
-                        <button className="download-button disabled">
-                          💾 Download
+                        <button className="w-full sm:w-auto px-6 py-2.5 bg-gray-300 text-gray-500 font-medium rounded-lg cursor-not-allowed">
+                          Save MP4
                         </button>
                       )}
                     </div>
+                    <VideoPlayer videoSrc={videoSrc} />
                   </div>
-                  <VideoPlayer videoSrc={videoSrc} />
+                )}
+              </div>
+            ) : isLoaded ? (
+              <div className="p-12 text-center">
+                <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
                 </div>
-              )}
-            </>
-          ) : isLoaded ? (
-            <div className="error-section">
-              <h1>Browser Not Supported</h1>
-              <p>
-                Please use a modern browser that supports SharedArrayBuffer.
-              </p>
-              <p className="tech-note">
-                Note: This requires HTTPS and specific security headers.
-              </p>
-            </div>
-          ) : (
-            <div className="loading-section">
-              <h2>Loading application...</h2>
-            </div>
-          )}
+                <h3 className="text-lg font-medium text-gray-900">Browser Not Supported</h3>
+                <p className="mt-2 text-gray-500 max-w-sm mx-auto">
+                  Please use a modern browser like Chrome, Edge, or Firefox that supports SharedArrayBuffer.
+                </p>
+              </div>
+            ) : (
+              <div className="p-12 flex flex-col items-center justify-center">
+                <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-500">Loading...</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-12 text-center text-sm text-gray-400">
+            &copy; {new Date().getFullYear()} Facebook Video Downloader. All rights reserved.
+          </div>
         </div>
       </div>
 
       <Modal visible={isModalVisible} onClose={hideModal}>
-        <div className="modal-content">
-          <h2 className="modal-title">Select Video Quality</h2>
-          <p className="modal-subtitle">Choose the quality you want to download</p>
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Select Quality</h2>
+            <p className="text-sm text-gray-500 mt-1">Choose your preferred video resolution</p>
+          </div>
+
           <MediaOptions
             resolutions={resolutions}
             selectMedia={selectMedia}
             selectedQuality={selectedQuality}
             thumbnail={thumbnail}
           />
-          <div className="modal-footer">
-            <button onClick={hideModal} className="modal-button secondary">
+
+          <div className="flex gap-3 mt-8 pt-6 border-t border-gray-100">
+            <button
+              onClick={hideModal}
+              className="flex-1 px-4 py-2.5 rounded-lg font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
               Cancel
             </button>
             <button
-              className={`modal-button primary ${
-                loading || !selectedQuality ? 'disabled' : ''
-              }`}
+              className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-white shadow-sm transition-all ${loading || !selectedQuality
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-black hover:bg-gray-800'
+                }`}
               onClick={extractLinkHandler}
               disabled={loading || !selectedQuality}
             >
-              {loading ? 'Processing...' : 'Download Selected'}
+              Download
             </button>
           </div>
         </div>
       </Modal>
-
-      <style jsx>{`
-        .container {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          padding: 2rem 1rem;
-        }
-
-        .main-content {
-          max-width: 800px;
-          margin: 0 auto;
-          background: white;
-          border-radius: 20px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
-
-        .header {
-          background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-          color: white;
-          padding: 3rem 2rem;
-          text-align: center;
-        }
-
-        .header h1 {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin: 0 0 0.5rem 0;
-          color: white;
-        }
-
-        .subtitle {
-          font-size: 1.1rem;
-          opacity: 0.9;
-          margin: 0 0 1rem 0;
-        }
-
-        .tech-badge {
-          display: inline-block;
-          background: rgba(16, 185, 129, 0.2);
-          color: #d1fae5;
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .input-section {
-          padding: 2rem;
-        }
-
-        .input-label {
-          display: block;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.5rem;
-          font-size: 1rem;
-        }
-
-        .input-box {
-          width: 100%;
-          min-height: 140px;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 1rem;
-          font-size: 0.95rem;
-          color: #374151;
-          background: #f9fafb;
-          resize: vertical;
-          transition: all 0.3s ease;
-          font-family: inherit;
-        }
-
-        .input-box:focus {
-          outline: none;
-          border-color: #4f46e5;
-          background: white;
-          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .action-section {
-          padding: 0 2rem 2rem;
-        }
-
-        .check-section {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .action-button {
-          width: 100%;
-          padding: 1rem 2rem;
-          border: none;
-          border-radius: 12px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-        }
-
-        .primary-button {
-          background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-          color: white;
-        }
-
-        .primary-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-        }
-
-        .primary-button:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        .cancel-button {
-          background: #ef4444;
-          color: white;
-        }
-
-        .cancel-button:hover {
-          background: #dc2626;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
-        }
-
-        .clear-button {
-          background: #10b981;
-          color: white;
-        }
-
-        .clear-button:hover {
-          background: #059669;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-        }
-
-        .proxy-option {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 1rem;
-          background: #f3f4f6;
-          border-radius: 12px;
-        }
-
-        .proxy-checkbox {
-          width: 1.25rem;
-          height: 1.25rem;
-          accent-color: #4f46e5;
-        }
-
-        .proxy-label {
-          display: flex;
-          flex-direction: column;
-          color: #374151;
-          cursor: pointer;
-        }
-
-        .proxy-label small {
-          color: #6b7280;
-          font-size: 0.85rem;
-        }
-
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .progress-bar-wrapper {
-          width: 100%;
-          height: 12px;
-          background: #e5e7eb;
-          border-radius: 6px;
-          overflow: hidden;
-        }
-
-        .progress-bar {
-          height: 100%;
-          background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
-          transition: width 0.3s ease;
-          border-radius: 6px;
-        }
-
-        .progress-text {
-          text-align: center;
-          color: #475569;
-          font-weight: 600;
-          margin: 0;
-        }
-
-        .error-section {
-          padding: 2rem;
-          background: #fef2f2;
-          border-top: 1px solid #fecaca;
-        }
-
-        .error-content {
-          text-align: center;
-          color: #dc2626;
-        }
-
-        .error-content h3 {
-          margin: 0 0 0.5rem 0;
-          color: #dc2626;
-        }
-
-        .error-content p {
-          margin: 0;
-          color: #991b1b;
-        }
-
-        .tech-note {
-          font-size: 0.9rem;
-          margin-top: 0.5rem;
-          opacity: 0.8;
-        }
-
-        .result-section {
-          padding: 2rem;
-          background: #f0fdf4;
-          border-top: 1px solid #bbf7d0;
-        }
-
-        .download-section h3 {
-          color: #166534;
-          margin: 0 0 1rem 0;
-          text-align: center;
-        }
-
-        .save-controls {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-        }
-
-        .file-name-input {
-          flex: 1;
-          padding: 0.75rem 1rem;
-          border: 2px solid #d1fae5;
-          border-radius: 8px;
-          font-size: 1rem;
-          color: #374151;
-        }
-
-        .file-name-input:focus {
-          outline: none;
-          border-color: #10b981;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-
-        .download-button {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: #10b981;
-          color: white;
-          text-decoration: none;
-          border-radius: 8px;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          border: none;
-          cursor: pointer;
-        }
-
-        .download-button:hover:not(.disabled) {
-          background: #059669;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
-
-        .download-button.disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        .loading-section {
-          padding: 4rem 2rem;
-          text-align: center;
-          color: #374151;
-        }
-
-        .loading-section h2 {
-          margin: 1rem 0 0 0;
-          color: #374151;
-          font-weight: 500;
-        }
-
-        .modal-content {
-          min-width: 500px;
-          max-width: 90vw;
-        }
-
-        .modal-title {
-          color: #1f2937;
-          text-align: center;
-          margin: 0 0 0.5rem 0;
-          font-size: 1.5rem;
-        }
-
-        .modal-subtitle {
-          color: #6b7280;
-          text-align: center;
-          margin: 0 0 1.5rem 0;
-        }
-
-        .modal-footer {
-          display: flex;
-          gap: 1rem;
-          margin-top: 2rem;
-          justify-content: flex-end;
-        }
-
-        .modal-button {
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: none;
-        }
-
-        .modal-button.primary {
-          background: #4f46e5;
-          color: white;
-        }
-
-        .modal-button.primary:hover:not(.disabled) {
-          background: #4338ca;
-          transform: translateY(-1px);
-        }
-
-        .modal-button.primary.disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .modal-button.secondary {
-          background: transparent;
-          color: #374151;
-          border: 2px solid #d1d5db;
-        }
-
-        .modal-button.secondary:hover {
-          background: #f3f4f6;
-          border-color: #9ca3af;
-        }
-
-        @media (max-width: 768px) {
-          .container {
-            padding: 1rem 0.5rem;
-          }
-
-          .header {
-            padding: 2rem 1rem;
-          }
-
-          .header h1 {
-            font-size: 2rem;
-          }
-
-          .input-section,
-          .action-section,
-          .error-section,
-          .result-section {
-            padding: 1.5rem 1rem;
-          }
-
-          .modal-content {
-            min-width: auto;
-            width: 90vw;
-          }
-
-          .save-controls {
-            flex-direction: column;
-          }
-
-          .modal-footer {
-            flex-direction: column;
-          }
-        }
-      `}</style>
     </>
   );
 }
