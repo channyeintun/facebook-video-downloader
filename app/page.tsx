@@ -189,8 +189,11 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-gray-900 selection:text-white">
         <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4 flex items-center justify-center gap-3">
               Facebook Video Downloader
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                New
+              </span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Download high-quality videos directly from Facebook. Fast, secure, and free.
@@ -377,8 +380,8 @@ export default function Home() {
             </button>
             <button
               className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-white shadow-sm transition-all ${loading || !selectedQuality
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-black hover:bg-gray-800'
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-black hover:bg-gray-800'
                 }`}
               onClick={extractLinkHandler}
               disabled={loading || !selectedQuality}
